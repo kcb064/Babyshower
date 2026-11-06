@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "description": "Baby shower registry"
+  },
+  "header": {
+    "home": "Registry",
+    "myClaims": "My claims",
+    "admin": "Edit",
+    "language": "Change language",
+    "skip": "Skip to content"
+  },
+  "cover": {
+    "when": "When",
+    "where": "Where",
+    "contact": "Contact",
+    "map": "Show on map",
+    "toList": "See the registry"
+  },
+  "list": {
+    "heading": "The registry",
+    "intro": "Pick something you'd like to give and tap \"I'll get it\". Nobody sees who took what unless you want them to.",
+    "all": "All",
+    "filter": "Filter by category",
+    "empty": "Nothing here yet. Check back soon!",
+    "emptyCategory": "Nothing in this category right now."
+  },
+  "item": {
+    "remaining": "{remaining} of {total} left",
+    "reservedCount": "{claimed} of {total} reserved",
+    "reserved": "Reserved",
+    "allReserved": "All reserved",
+    "reservedBy": "Reserved by {names}",
+    "must": "Most wanted",
+    "nice": "Nice to have",
+    "usedOk": "Happily take used",
+    "store": "Go to store",
+    "claim": "I'll get it",
+    "taken": "Already taken",
+    "back": "Back to the list",
+    "notes": "Good to know",
+    "notFound": "This item is no longer on the list."
+  },
+  "claim": {
+    "title": "Reserve",
+    "name": "Your name",
+    "email": "Your email",
+    "emailHelp": "Never shown to other guests.",
+    "qty": "Quantity",
+    "message": "Message (optional)",
+    "showName": "Show my name to other guests",
+    "showNameHelp": "Otherwise they only see that it is reserved.",
+    "address": "Mailing address (optional)",
+    "addressHelp": "If you'd like a thank-you card by post.",
+    "bought": "I've already bought it",
+    "submit": "I'll get it",
+    "submitting": "Saving…",
+    "holdInfo": "Your reservation is held for 72 hours. Mark it as bought once you've shopped, otherwise it becomes available again.",
+    "errors": {
+      "name": "Enter your name.",
+      "email": "Enter a valid email address.",
+      "qty": "Choose a quantity between 1 and {max}.",
+      "unavailable": "Someone got there first – there aren't that many left.",
+      "notFound": "This item can't be reserved.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "confirm": {
+    "title": "Thank you!",
+    "reserved": "You reserved {qty} × {name}.",
+    "purchased": "You bought {qty} × {name}. How kind!",
+    "expires": "Your reservation is held until {date}. Mark it as bought once you've shopped.",
+    "store": "Open the store page",
+    "linkTitle": "Save your link",
+    "linkHelp": "With this link you can see, change or release your claims from another device.",
+    "copy": "Copy link",
+    "copied": "Copied!",
+    "myClaims": "My claims",
+    "back": "Back to the list"
+  },
+  "myClaims": {
+    "title": "My claims",
+    "intro": "These are the things you've reserved from this device.",
+    "empty": "You have no claims here yet.",
+    "status_reserved": "Reserved",
+    "status_purchased": "Bought",
+    "expires": "Held until {date}",
+    "markPurchased": "I've bought it",
+    "release": "Release",
+    "invalidLink": "That link doesn't work. Check that you copied all of it.",
+    "linkTitle": "Your link to this page",
+    "linkHelp": "Open it on another device to see your claims there."
+  },
+  "admin": {
+    "title": "Edit the registry",
+    "signIn": {
+      "title": "Editor sign-in",
+      "passcode": "Passcode",
+      "submit": "Sign in",
+      "wrong": "Wrong passcode.",
+      "rateLimited": "Too many attempts. Wait a while and try again.",
+      "nameTitle": "What's your name?",
+      "nameHelp": "Your name appears in the change log so you can see who changed what.",
+      "name": "Your name",
+      "nameSubmit": "Continue"
+    },
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {name}",
+    "viewPublic": "View guest page",
+    "surprise": "Surprise mode is on: you see how much is reserved and bought, but not who took what.",
+    "saved": "Saved.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "swedish": "Swedish",
+    "english": "English (optional)",
+    "registry": {
+      "heading": "About the shower",
+      "title": "Title",
+      "welcome": "Welcome text",
+      "date": "Date",
+      "time": "Time",
+      "location": "Location",
+      "mapUrl": "Map link",
+      "hostContact": "Host contact",
+      "swish": "Swish number"
+    },
+    "categories": {
+      "heading": "Categories",
+      "add": "Add category",
+      "name": "Name",
+      "sortOrder": "Order",
+      "deleteConfirm": "Items in this category become uncategorised."
+    },
+    "items": {
+      "heading": "Items",
+      "add": "Add item",
+      "edit": "Edit",
+      "empty": "No items yet.",
+      "hidden": "Hidden",
+      "show": "Show",
+      "hide": "Hide",
+      "claimed": "Reserved",
+      "purchased": "Bought",
+      "wanted": "Wanted",
+      "newTitle": "New item",
+      "editTitle": "Edit item",
+      "name": "Name",
+      "description": "Description",
+      "notes": "Good to know (e.g. \"any colour\")",
+      "storeUrl": "Store link",
+      "fetch": "Fetch from link",
+      "fetching": "Fetching…",
+      "fetched": "Filled in from the page. Check and adjust.",
+      "fetchFailed": "Couldn't read that page. Fill in the details yourself.",
+      "imageUrl": "Image URL",
+      "upload": "…or upload an image",
+      "price": "Price (SEK)",
+      "qty": "Quantity wanted",
+      "priority": "Priority",
+      "must": "Most wanted",
+      "nice": "Nice to have",
+      "category": "Category",
+      "noCategory": "No category",
+      "usedOk": "Happily take used",
+      "visible": "Visible to guests",
+      "sortOrder": "Order",
+      "deleteConfirm": "Delete this item and all its claims?",
+      "back": "Back"
+    },
+    "log": {
+      "heading": "Recent changes",
+      "empty": "No changes yet."
+    },
+    "errors": {
+      "invalid": "Check the fields and try again.",
+      "image": "The image must be JPG, PNG, WebP or GIF and at most 5 MB."
+    }
+  },
+  "errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The link may be old or mistyped."
+  }
+}

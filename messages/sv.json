@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "description": "Önskelista till babyshowern"
+  },
+  "header": {
+    "home": "Önskelistan",
+    "myClaims": "Mina reservationer",
+    "admin": "Redigera",
+    "language": "Byt språk",
+    "skip": "Hoppa till innehållet"
+  },
+  "cover": {
+    "when": "När",
+    "where": "Var",
+    "contact": "Kontakt",
+    "map": "Visa på karta",
+    "toList": "Se önskelistan"
+  },
+  "list": {
+    "heading": "Önskelistan",
+    "intro": "Välj något du vill ge och tryck på \"Jag tar den\". Ingen ser vem som tagit vad, om du inte själv vill.",
+    "all": "Alla",
+    "filter": "Filtrera på kategori",
+    "empty": "Här finns inget ännu. Titta in igen snart!",
+    "emptyCategory": "Inget i den här kategorin just nu."
+  },
+  "item": {
+    "remaining": "{remaining} av {total} kvar",
+    "reservedCount": "{claimed} av {total} reserverade",
+    "reserved": "Reserverad",
+    "allReserved": "Alla reserverade",
+    "reservedBy": "Reserverad av {names}",
+    "must": "Önskas mest",
+    "nice": "Gärna",
+    "usedOk": "Tar gärna begagnat",
+    "store": "Till butiken",
+    "claim": "Jag tar den",
+    "taken": "Redan tagen",
+    "back": "Tillbaka till listan",
+    "notes": "Bra att veta",
+    "notFound": "Den här saken finns inte längre på listan."
+  },
+  "claim": {
+    "title": "Reservera",
+    "name": "Ditt namn",
+    "email": "Din e-post",
+    "emailHelp": "Syns aldrig för andra gäster.",
+    "qty": "Antal",
+    "message": "Hälsning (valfritt)",
+    "showName": "Visa mitt namn för andra gäster",
+    "showNameHelp": "Annars ser de bara att den är reserverad.",
+    "address": "Postadress (valfritt)",
+    "addressHelp": "Om du vill ha ett tackkort med posten.",
+    "bought": "Jag har redan köpt den",
+    "submit": "Jag tar den",
+    "submitting": "Sparar…",
+    "holdInfo": "Reservationen gäller i 72 timmar. Markera den som köpt när du har handlat, annars blir den ledig igen.",
+    "errors": {
+      "name": "Skriv ditt namn.",
+      "email": "Skriv en giltig e-postadress.",
+      "qty": "Välj ett antal mellan 1 och {max}.",
+      "unavailable": "Någon hann före – det finns inte så många kvar längre.",
+      "notFound": "Den här saken går inte att reservera.",
+      "generic": "Något gick fel. Försök igen."
+    }
+  },
+  "confirm": {
+    "title": "Tack!",
+    "reserved": "Du har reserverat {qty} × {name}.",
+    "purchased": "Du har köpt {qty} × {name}. Vad snällt!",
+    "expires": "Reservationen gäller till {date}. Markera den som köpt när du har handlat.",
+    "store": "Öppna butikens sida",
+    "linkTitle": "Spara din länk",
+    "linkHelp": "Med den här länken kan du se, ändra eller släppa dina reservationer från en annan enhet.",
+    "copy": "Kopiera länken",
+    "copied": "Kopierad!",
+    "myClaims": "Mina reservationer",
+    "back": "Tillbaka till listan"
+  },
+  "myClaims": {
+    "title": "Mina reservationer",
+    "intro": "Här ser du det du har reserverat från den här enheten.",
+    "empty": "Du har inga reservationer här ännu.",
+    "status_reserved": "Reserverad",
+    "status_purchased": "Köpt",
+    "expires": "Gäller till {date}",
+    "markPurchased": "Jag har köpt den",
+    "release": "Släpp reservationen",
+    "invalidLink": "Länken fungerar inte. Kontrollera att du kopierade hela länken.",
+    "linkTitle": "Din länk till den här sidan",
+    "linkHelp": "Öppna den på en annan enhet för att se dina reservationer där."
+  },
+  "admin": {
+    "title": "Redigera önskelistan",
+    "signIn": {
+      "title": "Logga in som redaktör",
+      "passcode": "Lösenkod",
+      "submit": "Logga in",
+      "wrong": "Fel lösenkod.",
+      "rateLimited": "För många försök. Vänta en stund och försök igen.",
+      "nameTitle": "Vad heter du?",
+      "nameHelp": "Namnet visas i ändringsloggen så att ni ser vem som ändrat vad.",
+      "name": "Ditt namn",
+      "nameSubmit": "Fortsätt"
+    },
+    "signOut": "Logga ut",
+    "signedInAs": "Inloggad som {name}",
+    "viewPublic": "Visa gästsidan",
+    "surprise": "Överraskningsläget är på: ni ser hur mycket som är reserverat och köpt, men inte vem som har tagit vad.",
+    "saved": "Sparat.",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Ta bort",
+    "moveUp": "Flytta upp",
+    "moveDown": "Flytta ner",
+    "swedish": "Svenska",
+    "english": "Engelska (valfritt)",
+    "registry": {
+      "heading": "Om babyshowern",
+      "title": "Rubrik",
+      "welcome": "Välkomsttext",
+      "date": "Datum",
+      "time": "Tid",
+      "location": "Plats",
+      "mapUrl": "Länk till karta",
+      "hostContact": "Kontakt till värden",
+      "swish": "Swish-nummer"
+    },
+    "categories": {
+      "heading": "Kategorier",
+      "add": "Lägg till kategori",
+      "name": "Namn",
+      "sortOrder": "Ordning",
+      "deleteConfirm": "Saker i kategorin blir utan kategori."
+    },
+    "items": {
+      "heading": "Saker",
+      "add": "Lägg till sak",
+      "edit": "Redigera",
+      "empty": "Inga saker ännu.",
+      "hidden": "Dold",
+      "show": "Visa",
+      "hide": "Dölj",
+      "claimed": "Reserverade",
+      "purchased": "Köpta",
+      "wanted": "Önskas",
+      "newTitle": "Ny sak",
+      "editTitle": "Redigera sak",
+      "name": "Namn",
+      "description": "Beskrivning",
+      "notes": "Bra att veta (t.ex. \"vilken färg som helst\")",
+      "storeUrl": "Länk till butik",
+      "fetch": "Hämta från länken",
+      "fetching": "Hämtar…",
+      "fetched": "Hämtade uppgifter från sidan. Kontrollera och justera.",
+      "fetchFailed": "Kunde inte läsa sidan. Fyll i uppgifterna själv.",
+      "imageUrl": "Bild-URL",
+      "upload": "…eller ladda upp en bild",
+      "price": "Pris (kr)",
+      "qty": "Antal som önskas",
+      "priority": "Prioritet",
+      "must": "Önskas mest",
+      "nice": "Gärna",
+      "category": "Kategori",
+      "noCategory": "Ingen kategori",
+      "usedOk": "Tar gärna begagnat",
+      "visible": "Synlig för gäster",
+      "sortOrder": "Ordning",
+      "deleteConfirm": "Ta bort den här saken och alla dess reservationer?",
+      "back": "Tillbaka"
+    },
+    "log": {
+      "heading": "Senaste ändringar",
+      "empty": "Inga ändringar ännu."
+    },
+    "errors": {
+      "invalid": "Kontrollera fälten och försök igen.",
+      "image": "Bilden måste vara JPG, PNG, WebP eller GIF och högst 5 MB."
+    }
+  },
+  "errors": {
+    "notFoundTitle": "Sidan finns inte",
+    "notFoundBody": "Länken kan vara gammal eller felstavad."
+  }
+}

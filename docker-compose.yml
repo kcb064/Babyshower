@@ -1,0 +1,34 @@
+services:
+  babyshower:
+    build: .
+    image: babyshower:latest
+    container_name: babyshower
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+      DATABASE_PATH: /data/registry.db
+    volumes:
+      - babyshower-data:/data
+    # Nothing is published to the host by default; the Cloudflare Tunnel reaches the container.
+    # Uncomment to reach it directly on the host (e.g. if cloudflared runs on the host, not in Docker):
+    # ports:
+    #   - "3000:3000"
+    #
+    # Routing your existing cloudflared tunnel:
+    #  - cloudflared in Docker: put it on the same network (see `networks` below, or attach it with
+    #    `docker network connect babyshower_default <cloudflared-container>`), then add a public
+    #    hostname in the tunnel config pointing at  http://babyshower:3000
+    #  - cloudflared on the host: uncomment `ports` above and point the hostname at
+    #    http://<host-ip>:3000  (or http://localhost:3000)
+    # networks:
+    #   - cloudflared
+
+volumes:
+  babyshower-data:
+
+# If your cloudflared container lives on an existing external network, declare it here
+# and uncomment `networks` on the service above:
+# networks:
+#   cloudflared:
+#     external: true
