@@ -25,7 +25,7 @@ Round 3 (2026-11-06):
 - **Reveal:** manual. Any editor presses "Reveal" when ready. A separate "Peek" button shows the full list once without flipping the reveal state, with a confirm step so it is not pressed by accident.
 - **Owner notifications:** ntfy.sh push on every new claim, fund contribution, and un-claim. Topic name is a random secret.
 - **Un-claim:** guests can release their own claims from the "my claims" page on the device they claimed from, or by a link in the on-screen confirmation that they can save.
-- **Theme:** awaiting pick from the six previews.
+- **Theme:** **Little Botanist** (theme 4). Linen `#F4F1EA` ground, eucalyptus `#8FA98F` cover, clay `#C97B5A` actions, ink `#2B2B2B` text. Cormorant Garamond headings, Work Sans body, 6px corners, eucalyptus and monstera line motifs. Built as the only theme in v1; the CSS-variable structure stays so another can be added later.
 
 
 ## 1. What the market does today
@@ -153,13 +153,12 @@ All gender-neutral by default. Each gives a palette, type pairing, and motif so 
 5. **Moon & Stars** — midnight navy `#1E2A44`, cream, soft gold `#E6C27A`, blush accent. Fonts: DM Serif Display + DM Sans. Motif: crescent moon, scattered stars, "twinkle" micro-animation on hover. Dark-mode friendly and striking on phones.
 6. **Woodland Friends** — oat, moss, rust, mushroom brown. Fonts: Baloo 2 + Nunito. Motif: fox, hedgehog, mushrooms. Playful; best if you already have a woodland invitation to match.
 
-Recommendation: **Nordic Soft** or **Winter Hygge** given the season and location; both read well in Swedish and English and print nicely for a QR card at the venue.
+Chosen: **Little Botanist**. Previews of all six: https://claude.ai/artifact/KMAzsGZQetp8VjmXiHc5h7
 
 ## 9. Still open
 
-1. **Theme pick** from the previews: https://claude.ai/artifact/KMAzsGZQetp8VjmXiHc5h7 (a number, or "cover of X with buttons of Y").
-2. **Tunnel hostname:** you already run cloudflared. Tell me the public hostname you will route to the container (e.g. `shower.example.se`) so the app can build absolute links for QR codes and the "my claims" link. Not needed to start building.
-3. **Go-ahead:** this plan was requested as plan-only. Say "build" and Week 1 starts on this branch.
+1. **Tunnel hostname:** you already run cloudflared. Tell me the public hostname you will route to the container (e.g. `shower.example.se`) so the app can build absolute links for QR codes and the "my claims" link. Not needed to start building.
+2. **Go-ahead:** this plan was requested as plan-only. Say "build" and Week 1 starts on this branch.
 
 ## 5. Sources consulted
 - Babylist group gifting help article: https://help.babylist.com/hc/en-us/articles/360052390974-What-is-Group-Gifting
