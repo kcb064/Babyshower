@@ -1,6 +1,6 @@
 # Baby Shower Registry App — Planning Document
 
-Status: planning complete, round 3. No code yet. Section 0 records every decision; sections 6–8 hold scope, schedule, and themes. Section 9 lists the two items still open. Theme previews: https://claude.ai/artifact/KMAzsGZQetp8VjmXiHc5h7
+Status: approved, build in progress (go-ahead 2026-11-06). Section 0 records every decision; sections 6–8 hold scope, schedule, and themes. Section 9 lists the two items still open. Theme previews: https://claude.ai/artifact/KMAzsGZQetp8VjmXiHc5h7
 
 ## 0. Decisions so far (2026-11-06)
 
@@ -158,7 +158,7 @@ Chosen: **Little Botanist**. Previews of all six: https://claude.ai/artifact/KMA
 ## 9. Still open
 
 1. **Tunnel hostname:** you already run cloudflared. Tell me the public hostname you will route to the container (e.g. `shower.example.se`) so the app can build absolute links for QR codes and the "my claims" link. Not needed to start building.
-2. **Go-ahead:** this plan was requested as plan-only. Say "build" and Week 1 starts on this branch.
+2. ~~Go-ahead~~ — given.
 
 ## 5. Sources consulted
 - Babylist group gifting help article: https://help.babylist.com/hc/en-us/articles/360052390974-What-is-Group-Gifting
@@ -169,3 +169,14 @@ Chosen: **Little Botanist**. Previews of all six: https://claude.ai/artifact/KMA
 - EasyTot registry comparison (completion discounts): https://easytot.com/blogs/guides/best-baby-registry
 - Self-hosted wishlist apps: https://gittrend.io/repo/cmintey/wishlist , https://selfhostyourself.com/services/poenskelisten , https://noted.lol/wishthis-self-hosted-wishlist-platform/
 - Swish QR / deep-link payload (third-party wrappers of the official QR API): https://www.npmjs.com/package/swish-qr , https://www.ruby-toolbox.com/projects/swish_qr , https://github.imc.re/gillstrom/swish-qr
+
+## 10. Build execution
+
+- **Who builds:** implementation is delegated to Opus 5.5 subagents in three phases matching the schedule's weeks 1–3; the coordinating session reviews, runs the full test suite, and commits after each phase. All phases run in one sitting rather than over three calendar weeks, so the registry should be ready for guests well before 20 Nov.
+- **Toolchain in the build container:** Node 22, pnpm 10, Docker 29, Playwright with Chromium. No `sqlite3` CLI; backups use `better-sqlite3`'s `.backup()` from a small script instead.
+- **Tests, all run on every phase:**
+  1. `pnpm typecheck` (tsc, no emit) and `pnpm lint` (eslint).
+  2. `pnpm test` — Vitest unit tests: claim quantity and expiry rules, surprise-mode aggregation, Swish payload encoding, SEK formatting, i18n fallback (en → sv), passcode cookie signing, link-scrape parser on fixture HTML.
+  3. `pnpm test:e2e` — Playwright against a built server with a temp SQLite file: editor sign-in, add item, guest claim → aggregate updates and name is hidden, "show my name" opt-in, un-claim, fund contribution via self-report, language toggle, Reveal and Peek, starter-list toggle.
+  4. `docker compose build` and a smoke run of the container hitting `/` and `/admin/sign-in`.
+- **Definition of done per phase:** all four green, pushed to `ccr-161763d9-uprse4`.
