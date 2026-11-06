@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+dist/
+data/
+*.db
+*.db-journal
+.env
+.env.local
+.env.*.local
+coverage/
+test-results/
+playwright-report/
+blob-report/
+.DS_Store
+*.log
