@@ -1,6 +1,6 @@
 # Baby Shower Registry App — Planning Document
 
-Status: planning only, round 2. No code yet. Section 0 records the decisions made so far; sections 6–8 hold the refined scope, schedule, themes, and remaining questions.
+Status: planning complete, round 3. No code yet. Section 0 records every decision; sections 6–8 hold scope, schedule, and themes. Section 9 lists the two items still open. Theme previews: https://claude.ai/artifact/KMAzsGZQetp8VjmXiHc5h7
 
 ## 0. Decisions so far (2026-11-06)
 
@@ -14,6 +14,18 @@ Status: planning only, round 2. No code yet. Section 0 records the decisions mad
 - **Access:** public link, no password.
 - **Hosting:** no custom domain. Either Vercel free tier or the owner's own Docker server.
 - **Stack:** no preference; see recommendation in section 6.
+
+Round 3 (2026-11-06):
+- **Language:** Swedish and English with a toggle. Swedish is the default. All UI strings in a translation file; editor enters item names and welcome text in both languages, English falls back to Swedish if blank.
+- **Currency:** SEK only, formatted Swedish style (`1 295 kr`).
+- **Hosting:** owner's Docker server behind an existing Cloudflare Tunnel. See 6.1 for why.
+- **Editor sign-in:** one shared passcode (environment variable), long-lived cookie. No Google.
+- **Swish:** one personal Swish number for all funds and group gifts.
+- **Starter list:** seeded Swedish-market starter items, all hidden by default; editor toggles the ones to show.
+- **Reveal:** manual. Any editor presses "Reveal" when ready. A separate "Peek" button shows the full list once without flipping the reveal state, with a confirm step so it is not pressed by accident.
+- **Owner notifications:** ntfy.sh push on every new claim, fund contribution, and un-claim. Topic name is a random secret.
+- **Un-claim:** guests can release their own claims from the "my claims" page on the device they claimed from, or by a link in the on-screen confirmation that they can save.
+- **Theme:** awaiting pick from the six previews.
 
 
 ## 1. What the market does today
@@ -78,10 +90,13 @@ Takeaways:
 
 ### 6.1 Stack recommendation
 - **Next.js 15 (App Router, TypeScript) + Tailwind + shadcn/ui.** One codebase for the public page, the editor dashboard, and the API. Deploys to Vercel with zero config and also builds into a small Docker image, so the hosting choice does not lock anything in.
-- **Database:** Postgres via Drizzle ORM. On Vercel use Neon's free tier. On the Docker server run Postgres as a sidecar container. Same schema either way. (SQLite is tempting for a single event but does not persist on Vercel, so Postgres keeps both hosting options open.)
-- **Editor auth:** Auth.js with Google sign-in and a hard-coded allowlist of three emails (owner, partner, host). No sign-up page. Fallback if any editor lacks a Google account: a single shared editor passcode set as an environment variable.
+- **Hosting decision: Docker server + Cloudflare Tunnel.** You already run tunnels, so public HTTPS and a stable hostname on your Cloudflare zone are solved, and everything stays on one box you control with no third-party database. Vercel would have needed an external Postgres for persistence and gives no benefit here beyond a `*.vercel.app` hostname. A `Dockerfile` and `docker-compose.yml` ship in the repo; the compose file includes the `cloudflared` sidecar so the whole thing is one `docker compose up`. (Assumption: your tunnel is a named tunnel on a domain you hold in Cloudflare. If it is a quick tunnel with a random `trycloudflare.com` URL, the link would change on restart; say so and we will revisit.)
+- **Database:** SQLite via Drizzle ORM with `better-sqlite3`, file on a mounted volume. Single event, low write volume, backup is copying one file. Nightly `sqlite3 .backup` to a second volume path inside the compose file.
+- **Editor auth:** one shared passcode in `EDITOR_PASSCODE`. Sign-in page sets a signed httpOnly cookie valid 90 days. Rate-limited to stop guessing. All three editors use the same passcode; the dashboard asks for a display name once so edits can still be attributed.
 - **Guest identity:** no account. Claim form takes name + email; a signed, httpOnly cookie remembers the guest on that device so they can see and release their own claims.
-- **Email:** deferred. Without a verified domain, free transactional-email tiers can only send to the owner's own address. v1 shows confirmations on screen and stores guest emails for the thank-you list. Owner notifications on new claims can go through a free ntfy.sh or Telegram bot webhook if wanted.
+- **Email:** deferred. v1 shows confirmations on screen and stores guest emails for the thank-you list. If you later add a verified sending domain on Cloudflare, claim confirmations can be switched on without schema changes.
+- **Owner notifications:** `ntfy.sh` POST to a secret topic on new claim, un-claim, purchase mark, and fund contribution. Subscribe in the ntfy app on each editor's phone. Topic set via `NTFY_TOPIC`; empty disables.
+- **i18n:** `next-intl` with `sv` and `en` message files. Locale in a cookie, toggle in the header, default `sv`. Item and registry text fields are stored as `{sv, en}` JSON with Swedish as the required half.
 - **Link scraping:** when an item has a store URL, fetch it server-side and read Open Graph / schema.org tags for title, image, and price; editor can override. Cache the result; re-check weekly for dead links.
 - **Images:** store the scraped image URL and proxy it through the app with caching. Allow a manual image upload for curated items without a link (Vercel Blob or a local volume on Docker).
 - **Swish:** generate `swish://payment?data={payee, amount, message}` deep links with the payee locked and the amount editable, plus a QR code of the same payload for guests on desktop. Guest taps "I've sent it" and enters the amount; the fund progress bar updates. Verify the exact JSON payload against Swish's official QR documentation during implementation.
@@ -103,13 +118,15 @@ Takeaways:
 - `/item/[id]` — claim sheet/modal: name, email, quantity, optional message, "show my name" toggle, optional address, mark purchased.
 - `/my-claims` — guest's own claims on this device; release or mark purchased.
 - `/admin` — editor dashboard: item CRUD, drag-order, categories, event details, theme, reveal date, aggregate progress, post-reveal gift list and thank-you tracker, CSV export.
-- `/admin/sign-in`.
+- `/admin/sign-in` — passcode form.
+- `/admin/reveal` — Reveal (permanent) and Peek (one-time view with confirm).
+- `/admin/starter` — seeded starter list grouped by category with show/hide toggles.
 
 ### 6.5 Data model
-- `Registry` (one row): title, welcome, eventDate, eventTime, location, mapUrl, hostContact, theme, revealAt, coverImage
-- `Editor`: email, name, role (owner | partner | host)
-- `Category`: name, sortOrder, icon
-- `Item`: type (physical | group | fund), name, description, imageUrl, storeUrl, price, qtyWanted, priority, categoryId, notes, usedOk, goalAmount, sortOrder
+- `Registry` (one row): title{sv,en}, welcome{sv,en}, eventDate, eventTime, location, mapUrl, hostContact, theme, revealed (bool), revealedAt, revealedBy, coverImage, swishNumber
+- `Category`: name{sv,en}, sortOrder, icon
+- `Item`: type (physical | group | fund), name{sv,en}, description{sv,en}, imageUrl, storeUrl, price, qtyWanted, priority, categoryId, notes{sv,en}, usedOk, goalAmount, sortOrder, visible (bool, seeded items start false), seeded (bool)
+- `EditorLog`: who (display name), what, when — lightweight audit so three editors can see each other's changes
 - `Claim`: itemId, guestName, guestEmail, qty, status (reserved | purchased | released), amount, message, showName, address, expiresAt, createdAt
 - `ThankYou`: claimId, sentAt, note
 
@@ -117,9 +134,9 @@ Takeaways:
 
 | Week | Dates | Deliverable |
 |---|---|---|
-| 1 | 7–13 Nov | Scaffold, DB, editor sign-in, item CRUD with link scraping, public page, claim flow, surprise-mode aggregates. Deployed to a shareable URL. |
-| 2 | 14–20 Nov | Group gifts and cash funds with Swish deep link + QR, guest "my claims", theme applied, mobile polish, categories, starter item list imported. **Send link to guests by ~20 Nov.** |
-| 3 | 21–27 Nov | Reveal logic, post-reveal gift list, thank-you tracker, CSV export, dead-link check, owner notifications (optional). Bug fixes from real guest use. |
+| 1 | 7–13 Nov | Scaffold, SQLite + Drizzle, passcode sign-in, sv/en toggle, item CRUD with link scraping, public page in chosen theme, claim and un-claim flow, surprise-mode aggregates, ntfy pings, Dockerfile + compose with cloudflared. Running on your server. |
+| 2 | 14–20 Nov | Group gifts and cash funds with Swish deep link + QR, guest "my claims", starter list seeded (hidden), categories, mobile polish, editor audit log. **Send link to guests by ~20 Nov.** |
+| 3 | 21–27 Nov | Reveal and Peek, post-reveal gift list, thank-you tracker, CSV export, dead-link check, nightly SQLite backup. Bug fixes from real guest use. |
 | 4 | 28 Nov – 5 Dec | Freeze features. Monitor claims, fix issues, prepare reveal. |
 | — | 6 Dec | Shower. Reveal. |
 
@@ -138,18 +155,11 @@ All gender-neutral by default. Each gives a palette, type pairing, and motif so 
 
 Recommendation: **Nordic Soft** or **Winter Hygge** given the season and location; both read well in Swedish and English and print nicely for a QR card at the venue.
 
-## 9. Remaining questions
+## 9. Still open
 
-1. **Language:** Swedish, English, or a toggle for both? Affects every label and the starter item list.
-2. **Currency:** SEK everywhere, or show both SEK and another currency for guests abroad?
-3. **Hosting pick:** Vercel free tier (easiest, `*.vercel.app` URL, zero ops) or your Docker server (needs public HTTPS via reverse proxy and a dynamic-DNS or similar hostname)? I recommend Vercel unless you already have HTTPS and a hostname on the Docker box.
-4. **Editor sign-in:** do all three editors have Google accounts, or should it be a shared passcode?
-5. **Swish payee:** whose Swish number receives fund contributions? One number for everything, or different numbers per fund?
-6. **Starter list:** do you want me to seed a Swedish-market starter list of items by category for you to prune, or will you enter the list yourself?
-7. **Theme:** pick one from section 8, or send an invitation/photo to match.
-8. **Reveal:** reveal on 6 Dec automatically, or keep it manual so one of you presses the button at the shower?
-9. **Owner notifications:** want a ping on new claims (Telegram or ntfy), or is checking the dashboard enough?
-10. **Guest release:** should guests be able to un-claim an item themselves, or only by emailing you?
+1. **Theme pick** from the previews: https://claude.ai/artifact/KMAzsGZQetp8VjmXiHc5h7 (a number, or "cover of X with buttons of Y").
+2. **Tunnel hostname:** confirm the tunnel is on a domain you hold in Cloudflare and tell me the hostname you want (e.g. `shower.example.se`). Not needed to start building; needed before guests get the link.
+3. **Go-ahead:** this plan was requested as plan-only. Say "build" and Week 1 starts on this branch.
 
 ## 5. Sources consulted
 - Babylist group gifting help article: https://help.babylist.com/hc/en-us/articles/360052390974-What-is-Group-Gifting
