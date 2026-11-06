@@ -90,7 +90,7 @@ Takeaways:
 
 ### 6.1 Stack recommendation
 - **Next.js 15 (App Router, TypeScript) + Tailwind + shadcn/ui.** One codebase for the public page, the editor dashboard, and the API. Deploys to Vercel with zero config and also builds into a small Docker image, so the hosting choice does not lock anything in.
-- **Hosting decision: Docker server + Cloudflare Tunnel.** You already run tunnels, so public HTTPS and a stable hostname on your Cloudflare zone are solved, and everything stays on one box you control with no third-party database. Vercel would have needed an external Postgres for persistence and gives no benefit here beyond a `*.vercel.app` hostname. A `Dockerfile` and `docker-compose.yml` ship in the repo; the compose file includes the `cloudflared` sidecar so the whole thing is one `docker compose up`. (Assumption: your tunnel is a named tunnel on a domain you hold in Cloudflare. If it is a quick tunnel with a random `trycloudflare.com` URL, the link would change on restart; say so and we will revisit.)
+- **Hosting decision: Docker server + Cloudflare Tunnel.** You already run tunnels, so public HTTPS and a stable hostname on your Cloudflare zone are solved, and everything stays on one box you control with no third-party database. Vercel would have needed an external Postgres for persistence and gives no benefit here beyond a `*.vercel.app` hostname. You already run `cloudflared`, so the app ships as one container with no tunnel sidecar. The compose file defines the `babyshower` service, a named volume for the SQLite file and backups, and exposes port 3000 on an internal network. You add a public hostname route in your tunnel config pointing at `http://babyshower:3000` (if cloudflared is on the same Docker network) or `http://<host-ip>:3000` (if it runs on the host). Nothing else is published to the internet.
 - **Database:** SQLite via Drizzle ORM with `better-sqlite3`, file on a mounted volume. Single event, low write volume, backup is copying one file. Nightly `sqlite3 .backup` to a second volume path inside the compose file.
 - **Editor auth:** one shared passcode in `EDITOR_PASSCODE`. Sign-in page sets a signed httpOnly cookie valid 90 days. Rate-limited to stop guessing. All three editors use the same passcode; the dashboard asks for a display name once so edits can still be attributed.
 - **Guest identity:** no account. Claim form takes name + email; a signed, httpOnly cookie remembers the guest on that device so they can see and release their own claims.
@@ -134,7 +134,7 @@ Takeaways:
 
 | Week | Dates | Deliverable |
 |---|---|---|
-| 1 | 7–13 Nov | Scaffold, SQLite + Drizzle, passcode sign-in, sv/en toggle, item CRUD with link scraping, public page in chosen theme, claim and un-claim flow, surprise-mode aggregates, ntfy pings, Dockerfile + compose with cloudflared. Running on your server. |
+| 1 | 7–13 Nov | Scaffold, SQLite + Drizzle, passcode sign-in, sv/en toggle, item CRUD with link scraping, public page in chosen theme, claim and un-claim flow, surprise-mode aggregates, ntfy pings, Dockerfile + compose. Running on your server behind your existing tunnel. |
 | 2 | 14–20 Nov | Group gifts and cash funds with Swish deep link + QR, guest "my claims", starter list seeded (hidden), categories, mobile polish, editor audit log. **Send link to guests by ~20 Nov.** |
 | 3 | 21–27 Nov | Reveal and Peek, post-reveal gift list, thank-you tracker, CSV export, dead-link check, nightly SQLite backup. Bug fixes from real guest use. |
 | 4 | 28 Nov – 5 Dec | Freeze features. Monitor claims, fix issues, prepare reveal. |
@@ -158,7 +158,7 @@ Recommendation: **Nordic Soft** or **Winter Hygge** given the season and locatio
 ## 9. Still open
 
 1. **Theme pick** from the previews: https://claude.ai/artifact/KMAzsGZQetp8VjmXiHc5h7 (a number, or "cover of X with buttons of Y").
-2. **Tunnel hostname:** confirm the tunnel is on a domain you hold in Cloudflare and tell me the hostname you want (e.g. `shower.example.se`). Not needed to start building; needed before guests get the link.
+2. **Tunnel hostname:** you already run cloudflared. Tell me the public hostname you will route to the container (e.g. `shower.example.se`) so the app can build absolute links for QR codes and the "my claims" link. Not needed to start building.
 3. **Go-ahead:** this plan was requested as plan-only. Say "build" and Week 1 starts on this branch.
 
 ## 5. Sources consulted
