@@ -1,6 +1,6 @@
 # Baby Shower Registry App — Planning Document
 
-Status: approved, build in progress (go-ahead 2026-11-06). Section 0 records every decision; sections 6–8 hold scope, schedule, and themes. Section 9 lists the two items still open. Theme previews: https://claude.ai/artifact/KMAzsGZQetp8VjmXiHc5h7
+Status: built (2026-11-07). All three phases are on branch `ccr-161763d9-uprse4` with 134 unit tests and 14 end-to-end tests passing. See README.md for deployment. Not yet done: first `docker compose build` on the owner's server (no Docker daemon in the build environment), `PUBLIC_URL` and Swish number to be set by the owner. Section 0 records every decision; sections 6–8 hold scope, schedule, and themes. Section 9 lists the two items still open. Theme previews: https://claude.ai/artifact/KMAzsGZQetp8VjmXiHc5h7
 
 ## 0. Decisions so far (2026-11-06)
 
@@ -157,8 +157,9 @@ Chosen: **Little Botanist**. Previews of all six: https://claude.ai/artifact/KMA
 
 ## 9. Still open
 
+0. **Docker image build on your server** is the first real test of the Dockerfile; everything else was verified here.
 1. **Tunnel hostname:** you already run cloudflared. Tell me the public hostname you will route to the container (e.g. `shower.example.se`) so the app can build absolute links for QR codes and the "my claims" link. Not needed to start building.
-2. ~~Go-ahead~~ — given.
+2. ~~Go-ahead~~ — given. Build complete.
 
 ## 5. Sources consulted
 - Babylist group gifting help article: https://help.babylist.com/hc/en-us/articles/360052390974-What-is-Group-Gifting
