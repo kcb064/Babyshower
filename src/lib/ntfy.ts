@@ -3,9 +3,9 @@
 export type NtfyEvent = "claim" | "purchased" | "released";
 
 const labels: Record<NtfyEvent, string> = {
-  claim: "Ny reservation",
-  purchased: "Markerad som köpt",
-  released: "Reservation släppt",
+  claim: "New reservation",
+  purchased: "Marked as purchased",
+  released: "Reservation released",
 };
 
 /**
@@ -21,16 +21,16 @@ export function ntfyMessage(opts: {
   revealed: boolean;
 }): string {
   const who = opts.revealed && opts.guestName ? ` – ${opts.guestName}` : "";
-  return `${labels[opts.event]}: ${opts.itemName} (${opts.claimed} av ${opts.total})${who}`;
+  return `${labels[opts.event]}: ${opts.itemName} (${opts.claimed} of ${opts.total})${who}`;
 }
 
-/** Group digits Swedish style with ordinary spaces (notification text, not HTML). */
+/** Group digits with ordinary spaces, e.g. 3 100 (notification text, not HTML). */
 function grouped(n: number): string {
   return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
 
 /**
- * "Nytt bidrag: Blöjfond 300 kr (3 100 / 5 000)". Sent when a guest confirms a Swish
+ * "New contribution: Diaper fund 300 kr (3 100 / 5 000)". Sent when a guest confirms a Swish
  * contribution. Same reveal rule as claims: the name is only added after reveal.
  */
 export function ntfyContributionMessage(opts: {
@@ -43,7 +43,7 @@ export function ntfyContributionMessage(opts: {
 }): string {
   const who = opts.revealed && opts.guestName ? ` – ${opts.guestName}` : "";
   const progress = opts.goal > 0 ? ` (${grouped(opts.confirmed)} / ${grouped(opts.goal)})` : ` (${grouped(opts.confirmed)} kr)`;
-  return `Nytt bidrag: ${opts.itemName} ${grouped(opts.amount)} kr${progress}${who}`;
+  return `New contribution: ${opts.itemName} ${grouped(opts.amount)} kr${progress}${who}`;
 }
 
 export function sendNtfy(message: string, topic: string | undefined = process.env.NTFY_TOPIC): void {

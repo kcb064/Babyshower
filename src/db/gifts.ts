@@ -128,7 +128,7 @@ export function listRevealedGifts(db: DB, now: Date = new Date()): GiftRow[] | n
  */
 export function peekGifts(db: DB, who: string, now: Date = new Date()): GiftRow[] {
   db.update(registry).set({ lastPeekAt: now, lastPeekBy: who }).where(eq(registry.id, 1)).run();
-  logEdit(db, who, `Peek by ${who}: tittade på hela listan utan att avslöja den`, now);
+  logEdit(db, who, `Peek by ${who}: viewed the full list without revealing it`, now);
   return loadGiftRows(db, now);
 }
 
@@ -142,7 +142,7 @@ export function revealRegistry(db: DB, who: string, now: Date = new Date()): Rev
     .where(and(eq(registry.id, 1), eq(registry.revealed, false)))
     .run();
   if (!res.changes) return { ok: false, reason: "already" };
-  logEdit(db, who, "Avslöjade listan", now);
+  logEdit(db, who, "Revealed the registry", now);
   return { ok: true };
 }
 
@@ -179,7 +179,7 @@ export function setThanked(
   } else {
     db.delete(thankYou).where(eq(thankYou.claimId, claimId)).run();
   }
-  return { ok: true, guestName: row.guestName, itemName: t2(row.itemName, "sv") };
+  return { ok: true, guestName: row.guestName, itemName: t2(row.itemName, "en") };
 }
 
 export function thankCounts(rows: readonly GiftRow[]): { thanked: number; total: number } {

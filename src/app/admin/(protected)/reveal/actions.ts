@@ -17,7 +17,7 @@ export async function revealAction(_prev: RevealState, formData: FormData): Prom
   const editor = await requireEditor();
   if (!isRevealConfirmation(formData.get("confirm"))) return { error: "confirm", at: Date.now() };
   const res = revealRegistry(getDb(), editor.name);
-  if (res.ok) sendNtfy(`Listan är avslöjad av ${editor.name}`);
+  if (res.ok) sendNtfy(`The registry was revealed by ${editor.name}`);
   revalidatePath("/admin", "layout");
   redirect("/admin/gifts");
 }

@@ -4,15 +4,15 @@ import { ntfyMessage, sendNtfy } from "@/lib/ntfy";
 describe("ntfy message", () => {
   it("never includes the guest name in surprise mode", () => {
     const msg = ntfyMessage({ event: "claim", itemName: "Babynest", claimed: 1, total: 1, guestName: "Anna", revealed: false });
-    expect(msg).toBe("Ny reservation: Babynest (1 av 1)");
+    expect(msg).toBe("New reservation: Babynest (1 of 1)");
     expect(msg).not.toContain("Anna");
   });
   it("labels purchases and releases", () => {
     expect(ntfyMessage({ event: "purchased", itemName: "Bodys", claimed: 2, total: 4, revealed: false })).toBe(
-      "Markerad som köpt: Bodys (2 av 4)",
+      "Marked as purchased: Bodys (2 of 4)",
     );
     expect(ntfyMessage({ event: "released", itemName: "Bodys", claimed: 1, total: 4, revealed: false })).toBe(
-      "Reservation släppt: Bodys (1 av 4)",
+      "Reservation released: Bodys (1 of 4)",
     );
   });
   it("may include the name after reveal", () => {
@@ -35,10 +35,10 @@ describe("sendNtfy", () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error("offline"));
     vi.stubGlobal("fetch", fetchMock);
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    expect(() => sendNtfy("Ny reservation: Babynest (1 av 1)", "secret-topic")).not.toThrow();
+    expect(() => sendNtfy("New reservation: Babynest (1 of 1)", "secret-topic")).not.toThrow();
     expect(fetchMock).toHaveBeenCalledWith(
       "https://ntfy.sh/secret-topic",
-      expect.objectContaining({ method: "POST", body: "Ny reservation: Babynest (1 av 1)", signal: expect.any(AbortSignal) }),
+      expect.objectContaining({ method: "POST", body: "New reservation: Babynest (1 of 1)", signal: expect.any(AbortSignal) }),
     );
     await new Promise((r) => setTimeout(r, 0));
     expect(warn).toHaveBeenCalled();

@@ -321,7 +321,7 @@ describe("ntfy contribution message", () => {
       guestName: "Anna",
       revealed: false,
     });
-    expect(msg).toBe("Nytt bidrag: Blöjfond 300 kr (3 100 / 5 000)");
+    expect(msg).toBe("New contribution: Blöjfond 300 kr (3 100 / 5 000)");
     expect(
       ntfyContributionMessage({
         itemName: "Blöjfond",

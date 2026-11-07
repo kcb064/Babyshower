@@ -18,7 +18,7 @@ export async function confirmContributionAction(formData: FormData) {
   if (result.ok) {
     sendNtfy(
       ntfyContributionMessage({
-        itemName: t2(result.claim.item.name, "sv"),
+        itemName: t2(result.claim.item.name, "en"),
         amount: result.claim.amount ?? 0,
         confirmed: result.totals.confirmed,
         goal: result.totals.goal,

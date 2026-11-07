@@ -72,7 +72,7 @@ test("full registry flow: add item, claim, surprise mode, show name, release", a
   const adminItem = ep.getByTestId("admin-item").filter({ hasText: ITEM_SV });
   await expect(adminItem).toBeVisible();
   await expect(adminItem.getByTestId("agg-claimed")).toHaveText("0");
-  await expect(ep.getByTestId("editor-log")).toContainText(`Lade till "${ITEM_SV}"`);
+  await expect(ep.getByTestId("editor-log")).toContainText(`Added "${ITEM_EN}"`);
   await expect(ep.getByTestId("editor-log")).toContainText("Mira");
 
   // --- Guest sees the item and claims one, name hidden ---

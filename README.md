@@ -23,7 +23,7 @@ for desktop guests (generated server-side with `qrcode`), and the number to copy
 counts toward the progress bar after the guest taps **"Jag har swishat"** (also available from
 "Mina reservationer"); unconfirmed contributions are dropped after 24 h. There is no payment
 verification: it is self-reported, by design. Editors see the total, number of contributions and
-pending count, never names before reveal. ntfy sends `Nytt bidrag: Blöjfond 300 kr (3 100 / 5 000)`
+pending count, never names before reveal. ntfy sends `New contribution: Nappy fund 300 kr (3 100 / 5 000)`
 when a contribution is confirmed.
 
 **Starter list.** About 60 Swedish-market suggestions (`src/db/starter.ts`) are inserted hidden on the
@@ -33,19 +33,21 @@ deleted suggestions do not come back on restart.
 ## Reveal, peek and the gift list
 
 - **`/admin/reveal` → Avslöja listan** is permanent. Type `AVSLÖJA` (or `REVEAL`) in the box and press the
-  button; it records who and when, writes the editor log and sends the ntfy push
-  "Listan är avslöjad av <namn>". After that every editor sees names, emails, messages and addresses.
+  button; it records who and when, writes the editor log (always in English, using an item's English
+  name when it has one) and sends the ntfy push
+  "The registry was revealed by <name>". After that every editor sees names, emails, messages and addresses.
 - **Titta en gång (peek)** shows the full list once without revealing it: tick "Jag förstår att det här
   förstör överraskningen" and submit. The list is only in that response (`Cache-Control: no-store`,
-  gone on reload), the peek is logged ("Peek by <namn>") and the dashboard shows
+  gone on reload), the peek is logged ("Peek by <name>") and the dashboard shows
   "Senast tittad: <namn>, <när>" so the others know. `revealed` stays false.
 - **`/admin/gifts`**: before reveal only the aggregate table. After reveal, every claim and contribution
   grouped by item with totals (funds list each contribution, unconfirmed Swish ones as "Väntar på
   bekräftelse"), plus a **Tackat** checkbox per gift with an optional note, filters
   (Alla / Inte tackade / Tackade) and "12 av 30 tackade". The dashboard also lists who gave what.
 - **CSV export** `/admin/gifts/export.csv` (editors only, 403 before reveal): UTF-8 with BOM, `;`
-  separator (Swedish Excel opens it directly with å/ä/ö), ISO dates. Columns: Sak, Typ, Namn, E-post,
-  Antal, Belopp (kr), Status, Hälsning, Adress, Visa namn, Skapad, Tackad, Tackanteckning. Free text
+  separator (Swedish Excel opens it directly with å/ä/ö), ISO dates. Columns: Item, Type, Name, Email,
+  Qty, Amount (SEK), Status, Message, Address, Show name, Created, Thanked, Thank-you note
+  (type: item / group gift / fund; status: Reserved / Purchased / Awaiting confirmation; yes/no for booleans). Free text
   starting with `= + - @` is prefixed with `'` so Excel never runs it as a formula.
 
 ## Link check, image proxy
@@ -88,7 +90,7 @@ Copy `.env.example` to `.env` and fill it in.
 |---|---|---|
 | `EDITOR_PASSCODE` | yes (prod) | Shared passcode for `/admin/sign-in` |
 | `COOKIE_SECRET` | yes (prod) | HMAC key for cookies, e.g. `openssl rand -hex 32` |
-| `NTFY_TOPIC` | no | Secret ntfy.sh topic for push notices on claim / purchase / release. Empty disables. |
+| `NTFY_TOPIC` | no | Secret ntfy.sh topic for push notices on claim / purchase / release, in English (e.g. `New reservation: Baby nest (1 of 2)`; guest names only after reveal). Empty disables. |
 | `PUBLIC_URL` | no | Public tunnel URL, used for the durable "my claims" link. Falls back to request host. |
 | `DATABASE_PATH` | no | SQLite file (default `./data/registry.db`, `/data/registry.db` in Docker) |
 | `DATA_DIR` | no | `uploads/`, `backups/` and `imgcache/` live here (default `./data`, `/data` in Docker) |

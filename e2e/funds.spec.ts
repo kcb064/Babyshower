@@ -1,8 +1,10 @@
 import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
 const FUND = "Blöjfond";
+const FUND_EN = "Nappy fund";
 const GROUP = "Duovagn";
 const STARTER = "Babygym";
+const STARTER_EN = "Play gym"; // English name from src/db/starter.ts; the editor log uses it
 const GUEST = "Karin Lund";
 const GUEST_EMAIL = "karin@example.com";
 const amountRe = (a: string, b: string) => new RegExp(`${a.replace(" ", "\\s")}\\skr av ${b.replace(" ", "\\s")}\\skr`);
@@ -56,13 +58,13 @@ test("cash fund: contribute 300 via Swish, confirm, progress and admin aggregate
   await ep.getByTestId("type-fund").check();
   await expect(ep.getByLabel("Länk till butik")).toHaveCount(0);
   await ep.getByLabel("Namn – Svenska").fill(FUND);
-  await ep.getByLabel("Namn – Engelska").fill("Nappy fund");
+  await ep.getByLabel("Namn – Engelska").fill(FUND_EN);
   await ep.getByLabel("Mål (kr)").fill("5000");
   await ep.getByTestId("save-item").click();
   await expect(ep).toHaveURL(/\/admin(#items)?$/);
   const adminFund = ep.getByTestId("admin-item").filter({ hasText: FUND });
   await expect(adminFund.getByTestId("fund-contributors")).toHaveText("0");
-  await expect(ep.getByTestId("editor-log")).toContainText(`Lade till insamlingen "${FUND}"`);
+  await expect(ep.getByTestId("editor-log")).toContainText(`Added the fund "${FUND_EN}"`);
 
   // --- Guest sees the fund card and contributes ---
   const guest = await newPage(browser);
@@ -215,6 +217,6 @@ test("starter list: toggling a suggestion makes it visible to guests", async ({ 
   await expect(card(guest.page, STARTER).getByTestId("item-status-text")).toHaveText("1 av 1 kvar");
 
   await ep.goto("/admin");
-  await expect(ep.getByTestId("editor-log")).toContainText(`Visade startförslaget "${STARTER}"`);
+  await expect(ep.getByTestId("editor-log")).toContainText(`Showed the starter suggestion "${STARTER_EN}"`);
   await Promise.all([editor.ctx.close(), guest.ctx.close()]);
 });

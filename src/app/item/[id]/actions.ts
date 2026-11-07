@@ -54,7 +54,7 @@ export async function claimItem(_prev: ClaimFormState, formData: FormData): Prom
   sendNtfy(
     ntfyMessage({
       event: input.purchased ? "purchased" : "claim",
-      itemName: t2(result.item.name, "sv"),
+      itemName: t2(result.item.name, "en"),
       claimed: result.claimedAfter,
       total: result.item.qtyWanted,
       guestName: input.name,

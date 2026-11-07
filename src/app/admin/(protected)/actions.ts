@@ -57,7 +57,7 @@ export async function updateRegistry(_prev: FormState, formData: FormData): Prom
     })
     .where(eq(registry.id, 1))
     .run();
-  logEdit(db, editor.name, "Uppdaterade uppgifterna om babyshowern");
+  logEdit(db, editor.name, "Updated the baby shower details");
   refresh();
   return { ok: true, at: Date.now() };
 }
@@ -73,7 +73,7 @@ export async function addCategory(formData: FormData) {
   db.insert(category)
     .values({ name: bilingual(parsed.data.nameSv, parsed.data.nameEn), sortOrder: top + 10 })
     .run();
-  logEdit(db, editor.name, `Lade till kategorin "${parsed.data.nameSv}"`);
+  logEdit(db, editor.name, `Added the category "${t2(bilingual(parsed.data.nameSv, parsed.data.nameEn), "en")}"`);
   refresh();
 }
 
@@ -87,7 +87,7 @@ export async function updateCategory(formData: FormData) {
     .set({ name: bilingual(parsed.data.nameSv, parsed.data.nameEn), sortOrder: parsed.data.sortOrder })
     .where(eq(category.id, id))
     .run();
-  logEdit(db, editor.name, `Ändrade kategorin "${parsed.data.nameSv}"`);
+  logEdit(db, editor.name, `Edited the category "${t2(bilingual(parsed.data.nameSv, parsed.data.nameEn), "en")}"`);
   refresh();
 }
 
@@ -102,7 +102,7 @@ export async function deleteCategory(formData: FormData) {
   const inUse = db.select({ n: count() }).from(item).where(eq(item.categoryId, id)).get()?.n ?? 0;
   if (inUse > 0) return;
   db.delete(category).where(eq(category.id, id)).run();
-  logEdit(db, editor.name, `Tog bort kategorin "${row.name.sv}"`);
+  logEdit(db, editor.name, `Deleted the category "${t2(row.name, "en")}"`);
   refresh();
 }
 
@@ -128,7 +128,8 @@ export async function moveCategory(formData: FormData) {
   db.transaction((tx) => {
     for (const r of next) tx.update(category).set({ sortOrder: r.sortOrder }).where(eq(category.id, r.id)).run();
   });
-  logEdit(db, editor.name, `Flyttade kategorin "${rows.find((r) => r.id === id)?.name.sv}" ${dir === "up" ? "upp" : "ner"}`);
+  const moved = rows.find((r) => r.id === id);
+  logEdit(db, editor.name, `Moved the category "${moved ? t2(moved.name, "en") : `#${id}`}" ${dir}`);
   refresh();
 }
 
@@ -136,10 +137,10 @@ export async function moveCategory(formData: FormData) {
 
 function itemName(db: DB, id: number): string {
   const row = db.select({ name: item.name }).from(item).where(eq(item.id, id)).get();
-  return row ? t2(row.name, "sv") : `#${id}`;
+  return row ? t2(row.name, "en") : `#${id}`;
 }
 
-const typeLabel: Record<ItemType, string> = { physical: "sak", group: "gruppresent", fund: "insamling" };
+const typeLabel: Record<ItemType, string> = { physical: "item", group: "group gift", fund: "fund" };
 
 export async function saveItem(_prev: FormState, formData: FormData): Promise<FormState> {
   const editor = await requireEditor();
@@ -182,6 +183,7 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
     updatedAt: new Date(),
   };
 
+  const logName = t2(values.name, "en");
   if (id) {
     const before = db.select({ type: item.type, storeUrl: item.storeUrl }).from(item).where(eq(item.id, id)).get();
     if (!before) return { error: "invalid", at: Date.now() };
@@ -201,16 +203,16 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
       .set({ ...values, ...linkReset, sortOrder: d.sortOrder })
       .where(eq(item.id, id))
       .run();
-    logEdit(db, editor.name, `Ändrade "${d.nameSv}"`);
+    logEdit(db, editor.name, `Edited "${logName}"`);
     if (before.type !== d.type) {
-      logEdit(db, editor.name, `Ändrade typ på "${d.nameSv}" från ${typeLabel[before.type]} till ${typeLabel[d.type]}`);
+      logEdit(db, editor.name, `Changed the type of "${logName}" from ${typeLabel[before.type]} to ${typeLabel[d.type]}`);
     }
   } else {
     const top = db.select({ m: max(item.sortOrder) }).from(item).get()?.m ?? 0;
     db.insert(item)
       .values({ ...values, sortOrder: top + 10 })
       .run();
-    logEdit(db, editor.name, d.type === "physical" ? `Lade till "${d.nameSv}"` : `Lade till ${typeLabel[d.type]}en "${d.nameSv}"`);
+    logEdit(db, editor.name, d.type === "physical" ? `Added "${logName}"` : `Added the ${typeLabel[d.type]} "${logName}"`);
   }
   refresh();
   // A redirect from a server action drops the #fragment, so the dashboard scrolls to #items
@@ -225,7 +227,7 @@ export async function deleteItem(formData: FormData) {
   const db = getDb();
   const name = itemName(db, id);
   const res = db.delete(item).where(eq(item.id, id)).run();
-  if (res.changes) logEdit(db, editor.name, `Tog bort "${name}"`);
+  if (res.changes) logEdit(db, editor.name, `Deleted "${name}"`);
   refresh();
 }
 
@@ -237,7 +239,7 @@ export async function toggleItemVisible(formData: FormData) {
   const row = db.select({ visible: item.visible }).from(item).where(eq(item.id, id)).get();
   if (!row) return;
   db.update(item).set({ visible: !row.visible, updatedAt: new Date() }).where(eq(item.id, id)).run();
-  logEdit(db, editor.name, `${row.visible ? "Dolde" : "Visade"} "${itemName(db, id)}"`);
+  logEdit(db, editor.name, `${row.visible ? "Hid" : "Showed"} "${itemName(db, id)}"`);
   refresh();
 }
 
@@ -253,7 +255,7 @@ export async function moveItem(formData: FormData) {
   db.transaction((tx) => {
     for (const r of next) tx.update(item).set({ sortOrder: r.sortOrder }).where(eq(item.id, r.id)).run();
   });
-  logEdit(db, editor.name, `Flyttade "${itemName(db, id)}" ${dir === "up" ? "upp" : "ner"}`);
+  logEdit(db, editor.name, `Moved "${itemName(db, id)}" ${dir}`);
   refresh();
 }
 
@@ -267,7 +269,7 @@ export async function toggleStarterItem(formData: FormData) {
   const row = db.select({ visible: item.visible, seeded: item.seeded }).from(item).where(eq(item.id, id)).get();
   if (!row || !row.seeded) return;
   db.update(item).set({ visible: !row.visible, updatedAt: new Date() }).where(eq(item.id, id)).run();
-  logEdit(db, editor.name, `${row.visible ? "Dolde" : "Visade"} startförslaget "${itemName(db, id)}"`);
+  logEdit(db, editor.name, `${row.visible ? "Hid" : "Showed"} the starter suggestion "${itemName(db, id)}"`);
   refresh();
 }
 
@@ -291,7 +293,7 @@ export async function setStarterCategoryVisible(formData: FormData) {
   logEdit(
     db,
     editor.name,
-    `${visible ? "Visade" : "Dolde"} alla startförslag i ${cat ? `"${cat.name.sv}"` : "utan kategori"} (${res.changes} st)`,
+    `${visible ? "Showed" : "Hid"} all starter suggestions in ${cat ? `"${t2(cat.name, "en")}"` : "no category"} (${res.changes})`,
   );
   refresh();
 }
@@ -347,7 +349,7 @@ export async function checkLinksAction(): Promise<LinkCheckState> {
   });
   const dead = results.filter((r) => r.status === "dead").length;
   const changed = results.filter((r) => r.status === "changed").length;
-  logEdit(db, editor.name, `Kontrollerade ${results.length} länkar (${dead} döda, ${changed} med ändrat pris)`);
+  logEdit(db, editor.name, `Checked ${results.length} links (${dead} dead, ${changed} with a changed price)`);
   refresh();
   return { status: "done", checked: results.length, dead, changed, at: now };
 }
@@ -363,7 +365,7 @@ export async function backupNowAction(): Promise<BackupState> {
   const editor = await requireEditor();
   try {
     const res = await backupNow();
-    logEdit(getDb(), editor.name, `Säkerhetskopierade databasen (${res.name})`);
+    logEdit(getDb(), editor.name, `Backed up the database (${res.name})`);
     revalidatePath("/admin");
     return { status: "done", name: res.name, count: res.count, at: Date.now() };
   } catch (err) {

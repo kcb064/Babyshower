@@ -98,7 +98,7 @@ describe("reveal", () => {
     expect(reg.revealedAt?.getTime()).toBe(now.getTime());
     expect(revealRegistry(db, "Lisa", new Date(now.getTime() + 1000))).toEqual({ ok: false, reason: "already" });
     expect(getRegistry(db).revealedBy).toBe("Mira");
-    expect(recentEditorLog(db).filter((l) => l.what === "Avslöjade listan")).toHaveLength(1);
+    expect(recentEditorLog(db).filter((l) => l.what === "Revealed the registry")).toHaveLength(1);
   });
 
   it("needs the typed confirmation", () => {

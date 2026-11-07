@@ -20,8 +20,8 @@ export async function setThankedAction(formData: FormData) {
     db,
     editor.name,
     thanked
-      ? `Markerade gåvan från ${res.guestName} ("${res.itemName}") som tackad${note ? `: ${note}` : ""}`
-      : `Tog bort tack-markeringen för ${res.guestName} ("${res.itemName}")`,
+      ? `Marked the gift from ${res.guestName} ("${res.itemName}") as thanked${note ? `: ${note}` : ""}`
+      : `Removed the thank-you mark for ${res.guestName} ("${res.itemName}")`,
   );
   revalidatePath("/admin/gifts");
 }

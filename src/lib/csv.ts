@@ -1,5 +1,5 @@
 /**
- * CSV for Swedish Excel: UTF-8 with BOM (so å/ä/ö survive on Windows), semicolon separator,
+ * CSV for Excel (incl. Swedish locale): UTF-8 with BOM (so non-ASCII letters survive on Windows), semicolon separator,
  * CRLF line endings, ISO dates.
  */
 
@@ -13,7 +13,7 @@ export function csvCell(value: CsvCell): string {
   if (value === null || value === undefined) return "";
   if (value instanceof Date) return value.toISOString();
   if (typeof value === "number") return Number.isFinite(value) ? String(value) : "";
-  if (typeof value === "boolean") return value ? "ja" : "nej";
+  if (typeof value === "boolean") return value ? "yes" : "no";
   let s = value;
   // Guest-typed text starting with = + - @ would run as a formula in Excel: prefix an apostrophe.
   if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
@@ -43,19 +43,19 @@ export interface GiftCsvRow {
 }
 
 export const GIFT_CSV_HEADER = [
-  "Sak",
-  "Typ",
-  "Namn",
-  "E-post",
-  "Antal",
-  "Belopp (kr)",
+  "Item",
+  "Type",
+  "Name",
+  "Email",
+  "Qty",
+  "Amount (SEK)",
   "Status",
-  "Hälsning",
-  "Adress",
-  "Visa namn",
-  "Skapad",
-  "Tackad",
-  "Tackanteckning",
+  "Message",
+  "Address",
+  "Show name",
+  "Created",
+  "Thanked",
+  "Thank-you note",
 ] as const;
 
 export function giftsCsv(rows: readonly GiftCsvRow[]): string {

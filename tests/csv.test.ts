@@ -21,8 +21,8 @@ describe("csvCell", () => {
     expect(csvCell(null)).toBe("");
     expect(csvCell(undefined)).toBe("");
     expect(csvCell(300)).toBe("300");
-    expect(csvCell(true)).toBe("ja");
-    expect(csvCell(false)).toBe("nej");
+    expect(csvCell(true)).toBe("yes");
+    expect(csvCell(false)).toBe("no");
     expect(csvCell(new Date("2026-12-06T13:00:00Z"))).toBe("2026-12-06T13:00:00.000Z");
   });
 });
@@ -41,12 +41,12 @@ describe("giftsCsv", () => {
     const csv = giftsCsv([
       {
         item: "Babynest",
-        type: "Sak",
+        type: "item",
         guestName: "Anna Andersson",
         email: "anna@example.com",
         qty: 1,
         amount: null,
-        status: "Köpt",
+        status: "Purchased",
         message: "Grattis; kram!",
         address: "Storgatan 1\n111 22 Stockholm",
         showName: false,
@@ -57,9 +57,9 @@ describe("giftsCsv", () => {
     ]);
     const lines = csv.slice(1).split("\r\n");
     expect(lines[0]).toBe(GIFT_CSV_HEADER.join(";"));
-    expect(lines[0]).toBe("Sak;Typ;Namn;E-post;Antal;Belopp (kr);Status;Hälsning;Adress;Visa namn;Skapad;Tackad;Tackanteckning");
+    expect(lines[0]).toBe("Item;Type;Name;Email;Qty;Amount (SEK);Status;Message;Address;Show name;Created;Thanked;Thank-you note");
     expect(csv).toContain(
-      'Babynest;Sak;Anna Andersson;anna@example.com;1;;Köpt;"Grattis; kram!";"Storgatan 1\n111 22 Stockholm";nej;2026-11-10T12:00:00.000Z;;',
+      'Babynest;item;Anna Andersson;anna@example.com;1;;Purchased;"Grattis; kram!";"Storgatan 1\n111 22 Stockholm";no;2026-11-10T12:00:00.000Z;;',
     );
     expect(GIFT_CSV_HEADER).toHaveLength(13);
   });

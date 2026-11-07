@@ -63,7 +63,7 @@ test("reveal and peek: surprise until reveal, then names, thank-yous and CSV", a
   await expect(ep.locator("body")).not.toContainText(GUEST_EMAIL);
   const refused = await ep.request.get("/admin/gifts/export.csv");
   expect(refused.status()).toBe(403);
-  expect(await refused.text()).toContain("Inte avslöjad än");
+  expect(await refused.text()).toContain("Not revealed yet");
 
   // --- Peek: checkbox required, shows the list once, logs, does not reveal ---
   await ep.goto("/admin/reveal");
@@ -149,10 +149,10 @@ test("reveal and peek: surprise until reveal, then names, thank-yous and CSV", a
   expect([...body.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
   const csv = body.subarray(3).toString("utf8");
   const [header, ...lines] = csv.split("\r\n");
-  expect(header).toBe("Sak;Typ;Namn;E-post;Antal;Belopp (kr);Status;Hälsning;Adress;Visa namn;Skapad;Tackad;Tackanteckning");
+  expect(header).toBe("Item;Type;Name;Email;Qty;Amount (SEK);Status;Message;Address;Show name;Created;Thanked;Thank-you note");
   const line = lines.find((l) => l.includes(GUEST_EMAIL));
   expect(line).toBeDefined();
-  expect(line).toContain(`${ITEM};Sak;${GUEST};${GUEST_EMAIL};1;;Reserverad;"${MESSAGE}";${ADDRESS};nej;`);
+  expect(line).toContain(`${ITEM};item;${GUEST};${GUEST_EMAIL};1;;Reserved;"${MESSAGE}";${ADDRESS};no;`);
   expect(line).toMatch(/;\d{4}-\d{2}-\d{2}T[\d:.]+Z;Kort skickat$/);
 
   await Promise.all([editor.ctx.close(), guest.ctx.close(), other.ctx.close()]);
@@ -174,7 +174,7 @@ test("backup button writes a backup and reports it", async ({ browser }) => {
   await expect(page.getByTestId("backup-result")).toHaveText(/Sparade registry-\d{8}-\d{4}(-\d+)?\.db\. \d+ kopi(a|or) finns nu\./);
   await page.reload();
   await expect(page.getByTestId("backup-count")).toContainText("Senaste kopian: registry-");
-  await expect(page.getByTestId("editor-log")).toContainText("Säkerhetskopierade databasen");
+  await expect(page.getByTestId("editor-log")).toContainText("Backed up the database");
   await ctx.close();
 });
 

@@ -17,7 +17,7 @@ async function change(formData: FormData, kind: "purchased" | "released") {
   sendNtfy(
     ntfyMessage({
       event: kind,
-      itemName: t2(result.claim.item.name, "sv"),
+      itemName: t2(result.claim.item.name, "en"),
       claimed: result.claimedAfter,
       total: result.claim.item.qtyWanted,
       guestName: result.claim.guestName,
