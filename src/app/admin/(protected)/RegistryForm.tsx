@@ -3,14 +3,21 @@
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import type { Registry } from "@/db/schema";
+import { TranslateButton, type TranslatePair } from "@/components/TranslateButton";
 import { updateRegistry, type FormState } from "./actions";
 
-export function RegistryForm({ registry }: { registry: Registry }) {
+const TRANSLATE_PAIRS: TranslatePair[] = [
+  { key: "title", enId: "titleEn", svId: "titleSv" },
+  { key: "welcome", enId: "welcomeEn", svId: "welcomeSv" },
+];
+
+export function RegistryForm({ registry, translateEnabled = false }: { registry: Registry; translateEnabled?: boolean }) {
   const t = useTranslations("admin");
   const [state, action, pending] = useActionState<FormState, FormData>(updateRegistry, {});
   return (
     <form action={action} className="grid gap-4 sm:grid-cols-2">
       <p className="help sm:col-span-2">{t("oneLanguage")}</p>
+      {translateEnabled && <TranslateButton pairs={TRANSLATE_PAIRS} className="sm:col-span-2" testId="translate-registry" />}
       <div>
         <label className="label" htmlFor="titleEn">
           {t("registry.title")} – {t("english")}

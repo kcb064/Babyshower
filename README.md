@@ -82,6 +82,27 @@ docker cp ./backups/registry-20261206-0300.db babyshower:/data/registry.db
 docker compose start babyshower
 ```
 
+## Auto-translate
+
+The item form, the baby shower details and the category list have an **Auto-translate empty fields**
+button. It fills the blank language from the one you wrote (Swedish ⇄ English) and never overwrites text:
+fields where both languages are filled, or neither, are skipped. Check the result, then save as usual.
+
+Two providers, picked automatically:
+
+- **Claude** (Anthropic API, `claude-haiku-5-5`) when `ANTHROPIC_API_KEY` is set. All fields go in one
+  request and product names and brands are kept as they are. A whole registry costs fractions of a cent.
+- **MyMemory** (`api.mymemory.translated.net`, free, no key) otherwise. One request per field, at most 500
+  characters each (longer texts are split on sentence boundaries). Anonymous use is capped at roughly
+  5 000 words per day per IP; when the cap is hit the button says to wait and try again later.
+
+`TRANSLATE_PROVIDER=mymemory` forces MyMemory even with a key; `TRANSLATE_PROVIDER=none` hides the button.
+Requests time out after 10 s and the server allows 30 translate clicks per 10 minutes. Each click is
+written to the editor log (`Auto-translated 3 field(s) (anthropic)`).
+
+`TRANSLATE_FAKE=1` is **test-only**: it makes the server return `[sv] …` / `[en] …` without any network call
+(the Playwright suite sets it). Never set it in a real deployment.
+
 ## Environment
 
 Copy `.env.example` to `.env` and fill it in.
@@ -94,6 +115,8 @@ Copy `.env.example` to `.env` and fill it in.
 | `PUBLIC_URL` | no | Public tunnel URL, used for the durable "my claims" link. Falls back to request host. |
 | `DATABASE_PATH` | no | SQLite file (default `./data/registry.db`, `/data/registry.db` in Docker) |
 | `DATA_DIR` | no | `uploads/`, `backups/` and `imgcache/` live here (default `./data`, `/data` in Docker) |
+| `ANTHROPIC_API_KEY` | no | Enables Claude for Auto-translate. Without it the free MyMemory API is used. |
+| `TRANSLATE_PROVIDER` | no | `anthropic`, `mymemory` or `none` (hides the Auto-translate button) |
 
 The server refuses to start in production without `EDITOR_PASSCODE` and `COOKIE_SECRET`.
 Migrations run and default data is seeded automatically on startup.
@@ -162,7 +185,7 @@ pnpm backup         # one-off backup of DATABASE_PATH into DATA_DIR/backups
 pnpm typecheck      # tsc --noEmit
 pnpm lint           # eslint
 pnpm test           # vitest unit tests (claims, funds, Swish, starter seed, SEK, i18n, cookies, scraper, ntfy,
-                    #   reveal/peek rules, thank-yous, CSV, link check, backup retention, image proxy)
+                    #   reveal/peek rules, thank-yous, CSV, link check, backup retention, image proxy, translate)
 pnpm test:e2e       # builds, starts the standalone server on :3100 with a temp DB and EDITOR_PASSCODE=test
 pnpm build
 ```

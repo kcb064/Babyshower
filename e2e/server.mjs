@@ -31,6 +31,10 @@ const child = spawn(process.execPath, [path.join(standalone, "server.js")], {
     COOKIE_SECRET: "e2e-cookie-secret-not-for-production",
     PUBLIC_URL: `http://localhost:${port}`,
     NTFY_TOPIC: "",
+    // Auto-translate without network: the fake provider returns "[sv] text" / "[en] text".
+    TRANSLATE_PROVIDER: "mymemory",
+    TRANSLATE_FAKE: "1",
+    ANTHROPIC_API_KEY: "",
   },
 });
 

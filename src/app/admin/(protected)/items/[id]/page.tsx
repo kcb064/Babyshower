@@ -6,6 +6,7 @@ import { getDb } from "@/db";
 import { listCategories } from "@/db/queries";
 import { item as itemTable } from "@/db/schema";
 import { normalizeLocale, t2 } from "@/lib/i18n";
+import { resolveProvider } from "@/lib/translate";
 import { ItemForm } from "../ItemForm";
 
 export default async function EditItemPage({ params }: { params: Promise<{ id: string }> }) {
@@ -23,7 +24,7 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
         ← {t("back")}
       </Link>
       <h1 className="mb-6 mt-3 text-5xl">{t("editTitle")}</h1>
-      <ItemForm item={item} categories={categories} />
+      <ItemForm item={item} categories={categories} translateEnabled={resolveProvider(process.env) !== "none"} />
     </div>
   );
 }

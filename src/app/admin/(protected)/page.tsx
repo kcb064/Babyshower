@@ -10,6 +10,8 @@ import { formatDateTime, formatRelative, formatSEK } from "@/lib/format";
 import { normalizeLocale, t2 } from "@/lib/i18n";
 import { listBackups, backupsDir } from "@/lib/backup";
 import { linkBadge } from "@/lib/linkcheck";
+import { resolveProvider } from "@/lib/translate";
+import { TranslateButton } from "@/components/TranslateButton";
 import { BackupButton, LinkCheckButton } from "./AdminTools";
 import { ScrollToItems } from "./ScrollToItems";
 import { addCategory, deleteCategory, deleteItem, moveCategory, moveItem, toggleItemVisible, updateCategory } from "./actions";
@@ -33,6 +35,11 @@ export default async function AdminPage() {
   const backups = listBackups(backupsDir());
   // Only non-null after reveal: the surprise-mode rule lives in listRevealedGifts.
   const revealedGifts = listRevealedGifts(db, now);
+  const translateEnabled = resolveProvider(process.env) !== "none";
+  const categoryPairs = [
+    ...categories.map((c) => ({ key: `cat-${c.id}`, enId: `cat-${c.id}-en`, svId: `cat-${c.id}-sv` })),
+    { key: "cat-new", enId: "cat-new-en", svId: "cat-new-sv" },
+  ];
 
   return (
     <div className="space-y-10 py-6">
@@ -236,7 +243,7 @@ export default async function AdminPage() {
         <h2 id="registry-title" className="mb-4 text-3xl">
           {t("registry.heading")}
         </h2>
-        <RegistryForm registry={registry} />
+        <RegistryForm registry={registry} translateEnabled={translateEnabled} />
       </section>
 
       <section aria-labelledby="categories-title" className="card p-4 sm:p-6">
@@ -244,6 +251,7 @@ export default async function AdminPage() {
           {t("categories.heading")}
         </h2>
         <p className="mb-4 mt-1 text-sm text-ink-soft">{t("categories.deleteDisabled")}</p>
+        {translateEnabled && <TranslateButton pairs={categoryPairs} className="mb-4" testId="translate-categories" />}
         <ul className="space-y-2">
           {categories.map((c, idx) => (
             <li key={c.id} className="flex flex-col gap-2 rounded-[var(--radius)] bg-linen p-2 sm:flex-row sm:items-center">
@@ -251,12 +259,14 @@ export default async function AdminPage() {
                 <input type="hidden" name="id" value={c.id} />
                 <input type="hidden" name="sortOrder" value={c.sortOrder} />
                 <input
+                  id={`cat-${c.id}-en`}
                   name="nameEn"
                   defaultValue={c.name.en ?? ""}
                   aria-label={`${t("categories.name")} – ${t("english")}`}
                   className="field min-w-0 flex-1 basis-32"
                 />
                 <input
+                  id={`cat-${c.id}-sv`}
                   name="nameSv"
                   defaultValue={c.name.sv ?? ""}
                   aria-label={`${t("categories.name")} – ${t("swedish")}`}
@@ -306,12 +316,14 @@ export default async function AdminPage() {
         </ul>
         <form action={addCategory} className="mt-4 flex flex-wrap items-center gap-2">
           <input
+            id="cat-new-en"
             name="nameEn"
             placeholder={t("english")}
             aria-label={`${t("categories.name")} – ${t("english")}`}
             className="field min-w-0 flex-1 basis-32"
           />
           <input
+            id="cat-new-sv"
             name="nameSv"
             placeholder={t("swedish")}
             aria-label={`${t("categories.name")} – ${t("swedish")}`}

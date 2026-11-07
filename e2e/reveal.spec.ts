@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
-// Runs last (files run alphabetically on one worker): it reveals the shared registry for good.
+// Runs after funds and registry (files run alphabetically on one worker): it reveals the shared registry for good.
+// translate.spec.ts runs after it and does not depend on surprise mode.
 const ITEM = "Spjälsäng";
 const GUEST = "Greta Gustafsson";
 const GUEST_EMAIL = "greta@example.com";

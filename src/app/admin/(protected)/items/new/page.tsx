@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db";
 import { listCategories } from "@/db/queries";
 import { normalizeLocale, t2 } from "@/lib/i18n";
+import { resolveProvider } from "@/lib/translate";
 import { ItemForm } from "../ItemForm";
 
 export default async function NewItemPage() {
@@ -15,7 +16,7 @@ export default async function NewItemPage() {
         ← {t("back")}
       </Link>
       <h1 className="mb-6 mt-3 text-5xl">{t("newTitle")}</h1>
-      <ItemForm categories={categories} />
+      <ItemForm categories={categories} translateEnabled={resolveProvider(process.env) !== "none"} />
     </div>
   );
 }

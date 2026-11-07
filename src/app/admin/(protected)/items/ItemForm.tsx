@@ -4,14 +4,22 @@ import Link from "next/link";
 import { useActionState, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import type { Item, ItemType } from "@/db/schema";
+import { TranslateButton, type TranslatePair } from "@/components/TranslateButton";
 import { fetchFromLink, saveItem, type FormState } from "../actions";
 
 interface Props {
   item?: Item;
   categories: { id: number; name: string }[];
+  translateEnabled?: boolean;
 }
 
-export function ItemForm({ item, categories }: Props) {
+const TRANSLATE_PAIRS: TranslatePair[] = [
+  { key: "name", enId: "nameEn", svId: "nameSv" },
+  { key: "description", enId: "descriptionEn", svId: "descriptionSv" },
+  { key: "notes", enId: "notesEn", svId: "notesSv" },
+];
+
+export function ItemForm({ item, categories, translateEnabled = false }: Props) {
   const t = useTranslations("admin");
   const [state, action, pending] = useActionState<FormState, FormData>(saveItem, {});
   const [nameSv, setNameSv] = useState(item?.name.sv ?? "");
@@ -24,6 +32,15 @@ export function ItemForm({ item, categories }: Props) {
   const isProduct = type !== "fund";
   const [fetchStatus, setFetchStatus] = useState<"idle" | "ok" | "failed">("idle");
   const [fetching, startFetch] = useTransition();
+
+  // nameSv and descriptionSv are controlled; update their state directly. The rest are written into the DOM.
+  function onTranslated(key: string, lang: "en" | "sv", value: string): boolean {
+    if (lang !== "sv") return false;
+    if (key === "name") setNameSv(value.slice(0, 200));
+    else if (key === "description") setDescriptionSv(value.slice(0, 2000));
+    else return false;
+    return true;
+  }
 
   function onFetch() {
     startFetch(async () => {
@@ -106,6 +123,7 @@ export function ItemForm({ item, categories }: Props) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <p className="help sm:col-span-2">{t("oneLanguage")}</p>
+        {translateEnabled && <TranslateButton pairs={TRANSLATE_PAIRS} onFilled={onTranslated} className="sm:col-span-2" />}
         <div>
           <label className="label" htmlFor="nameEn">
             {t("items.name")} – {t("english")}
