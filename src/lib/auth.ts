@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { serverEnv } from "./env";
+import { secureCookieFlag } from "./cookies";
 import { signToken, verifyToken } from "./signing";
 
 export { EDITOR_COOKIE } from "./auth-constants";
@@ -45,7 +46,7 @@ export async function setEditorCookie(name: string | null) {
   store.set(EDITOR_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: env.secureCookies,
+    secure: await secureCookieFlag(),
     path: "/",
     maxAge: EDITOR_MAX_AGE,
   });

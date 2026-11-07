@@ -128,6 +128,13 @@ Change visibility. A public package needs no login to pull.
 
 Data (database, uploads, backups, image cache) lives in the named volume `babyshower-data`. See *Backups* above.
 
+### Sign-in loops back to the passcode page?
+
+Cookies are marked `Secure` only when the request arrived over HTTPS (Cloudflare sets
+`X-Forwarded-Proto: https`). If you open the app directly on `http://<host>:3000` the cookie is
+sent without `Secure`, so both the tunnel address and a direct LAN address work. If sign-in still
+loops, check that the browser accepts cookies for the site and that `COOKIE_SECRET` is set.
+
 ### Routing the existing Cloudflare Tunnel
 
 No port is published by default. In your tunnel's public hostname settings (or `config.yml` ingress):

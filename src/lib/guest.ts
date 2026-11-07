@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { randomBytes } from "node:crypto";
 import { serverEnv } from "./env";
+import { secureCookieFlag } from "./cookies";
 import { signToken, verifyToken } from "./signing";
 
 export const GUEST_COOKIE = "bs_guest";
@@ -31,7 +32,7 @@ export async function setGuestCookie(guest: GuestIdentity) {
   (await cookies()).set(GUEST_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: env.secureCookies,
+    secure: await secureCookieFlag(),
     path: "/",
     maxAge: GUEST_MAX_AGE,
   });

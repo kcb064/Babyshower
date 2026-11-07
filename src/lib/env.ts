@@ -13,7 +13,6 @@ export interface ServerEnv {
   databasePath: string;
   dataDir: string;
   uploadsDir: string;
-  secureCookies: boolean;
 }
 
 /** Throw if a required production variable is missing. Called once at server startup. */
@@ -36,7 +35,5 @@ export function serverEnv(): ServerEnv {
     databasePath: path.resolve(process.env.DATABASE_PATH?.trim() || "./data/registry.db"),
     dataDir,
     uploadsDir: path.join(dataDir, "uploads"),
-    // Behind Cloudflare the browser talks HTTPS; allow plain-http PUBLIC_URL for local runs and tests.
-    secureCookies: isProd && !(publicUrl?.startsWith("http://") ?? false),
   };
 }
