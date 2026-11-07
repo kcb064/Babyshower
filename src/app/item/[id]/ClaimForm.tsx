@@ -4,7 +4,7 @@ import { useActionState, useId } from "react";
 import { useTranslations } from "next-intl";
 import { claimItem, type ClaimFormState } from "./actions";
 
-export function ClaimForm({ itemId, remaining }: { itemId: number; remaining: number }) {
+export function ClaimForm({ itemId, remaining, submitLabel }: { itemId: number; remaining: number; submitLabel?: string }) {
   const t = useTranslations("claim");
   const [state, action, pending] = useActionState<ClaimFormState, FormData>(claimItem, {});
   const id = useId();
@@ -122,7 +122,7 @@ export function ClaimForm({ itemId, remaining }: { itemId: number; remaining: nu
       </fieldset>
       <p className="help">{t("holdInfo")}</p>
       <button type="submit" className="btn btn-primary w-full" disabled={pending} data-testid="claim-submit">
-        {pending ? t("submitting") : t("submit")}
+        {pending ? t("submitting") : (submitLabel ?? t("submit"))}
       </button>
     </form>
   );

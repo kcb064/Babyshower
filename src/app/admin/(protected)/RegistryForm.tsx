@@ -70,15 +70,29 @@ export function RegistryForm({ registry }: { registry: Registry }) {
         <label className="label" htmlFor="swishNumber">
           {t("registry.swish")}
         </label>
-        <input id="swishNumber" name="swishNumber" inputMode="tel" defaultValue={registry.swishNumber ?? ""} className="field" />
+        <input
+          id="swishNumber"
+          name="swishNumber"
+          inputMode="tel"
+          autoComplete="off"
+          defaultValue={registry.swishNumber ?? ""}
+          aria-invalid={state.error === "swish" ? true : undefined}
+          aria-describedby="swish-help"
+          className="field"
+        />
+        <p id="swish-help" className={state.error === "swish" ? "mt-1 text-sm text-danger" : "help"}>
+          {state.error === "swish" ? t("errors.swish") : t("registry.swishHelp")}
+        </p>
       </div>
       <div className="flex items-center gap-3 sm:col-span-2">
-        <button type="submit" className="btn btn-primary" disabled={pending}>
+        <button type="submit" className="btn btn-primary" disabled={pending} data-testid="save-registry">
           {t("save")}
         </button>
         <span aria-live="polite" className="text-sm">
           {state.ok && <span className="text-eucalyptus-deep">{t("saved")}</span>}
-          {state.error && <span className="text-danger">{t("errors.invalid")}</span>}
+          {state.error && (
+            <span className="text-danger">{state.error === "swish" ? t("errors.swish") : t("errors.invalid")}</span>
+          )}
         </span>
       </div>
     </form>

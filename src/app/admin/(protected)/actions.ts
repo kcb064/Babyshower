@@ -1,11 +1,11 @@
 "use server";
 
-import { asc, eq, max } from "drizzle-orm";
+import { and, asc, count, eq, inArray, max } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, type DB } from "@/db";
 import { logEdit } from "@/db/queries";
-import { category, item, registry } from "@/db/schema";
+import { category, claim, item, registry, type ItemType } from "@/db/schema";
 import { requireEditor } from "@/lib/auth";
 import { serverEnv } from "@/lib/env";
 import { bilingual, t2 } from "@/lib/i18n";
@@ -15,7 +15,7 @@ import { categorySchema, formToObject, itemSchema, registrySchema } from "@/lib/
 
 export interface FormState {
   ok?: boolean;
-  error?: "invalid" | "image";
+  error?: "invalid" | "image" | "swish" | "goal" | "typeLocked";
   at?: number;
 }
 
@@ -34,7 +34,10 @@ function idFrom(formData: FormData): number | null {
 export async function updateRegistry(_prev: FormState, formData: FormData): Promise<FormState> {
   const editor = await requireEditor();
   const parsed = registrySchema.safeParse(formToObject(formData));
-  if (!parsed.success) return { error: "invalid", at: Date.now() };
+  if (!parsed.success) {
+    const swish = parsed.error.issues.some((i) => i.path[0] === "swishNumber");
+    return { error: swish ? "swish" : "invalid", at: Date.now() };
+  }
   const d = parsed.data;
   const db = getDb();
   db.update(registry)
@@ -92,6 +95,9 @@ export async function deleteCategory(formData: FormData) {
   const db = getDb();
   const row = db.select().from(category).where(eq(category.id, id)).get();
   if (!row) return;
+  // Only empty categories can be deleted (hidden starter suggestions count too).
+  const inUse = db.select({ n: count() }).from(item).where(eq(item.categoryId, id)).get()?.n ?? 0;
+  if (inUse > 0) return;
   db.delete(category).where(eq(category.id, id)).run();
   logEdit(db, editor.name, `Tog bort kategorin "${row.name.sv}"`);
   refresh();
@@ -130,12 +136,18 @@ function itemName(db: DB, id: number): string {
   return row ? t2(row.name, "sv") : `#${id}`;
 }
 
+const typeLabel: Record<ItemType, string> = { physical: "sak", group: "gruppresent", fund: "insamling" };
+
 export async function saveItem(_prev: FormState, formData: FormData): Promise<FormState> {
   const editor = await requireEditor();
   const id = idFrom(formData);
   const parsed = itemSchema.safeParse(formToObject(formData));
-  if (!parsed.success) return { error: "invalid", at: Date.now() };
+  if (!parsed.success) {
+    const goal = parsed.error.issues.some((i) => i.path[0] === "goalAmount");
+    return { error: goal ? "goal" : "invalid", at: Date.now() };
+  }
   const d = parsed.data;
+  const isFund = d.type === "fund";
 
   let imageUrl = d.imageUrl;
   const upload = formData.get("imageFile");
@@ -149,35 +161,51 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
   if (d.categoryId !== null && !db.select({ id: category.id }).from(category).where(eq(category.id, d.categoryId)).get()) {
     return { error: "invalid", at: Date.now() };
   }
+  // Funds are not products: no image, link, price, quantity or "used ok". Group gifts are one item.
   const values = {
+    type: d.type,
     name: bilingual(d.nameSv, d.nameEn),
     description: d.descriptionSv ? bilingual(d.descriptionSv, d.descriptionEn) : null,
     notes: d.notesSv ? bilingual(d.notesSv, d.notesEn) : null,
-    imageUrl,
-    storeUrl: d.storeUrl,
-    price: d.price,
-    qtyWanted: d.qtyWanted,
+    imageUrl: isFund ? null : imageUrl,
+    storeUrl: isFund ? null : d.storeUrl,
+    price: isFund ? null : d.price,
+    qtyWanted: d.type === "physical" ? d.qtyWanted : 1,
     priority: d.priority,
     categoryId: d.categoryId,
-    usedOk: d.usedOk,
+    usedOk: d.type === "physical" ? d.usedOk : false,
+    goalAmount: d.type === "physical" ? null : (d.goalAmount ?? d.price),
     visible: d.visible,
     updatedAt: new Date(),
   };
 
   if (id) {
-    const res = db
-      .update(item)
+    const before = db.select({ type: item.type }).from(item).where(eq(item.id, id)).get();
+    if (!before) return { error: "invalid", at: Date.now() };
+    if (before.type !== d.type) {
+      // Changing type under live claims would turn reservations into money (or back): refuse.
+      const active =
+        db
+          .select({ n: count() })
+          .from(claim)
+          .where(and(eq(claim.itemId, id), inArray(claim.status, ["reserved", "purchased"])))
+          .get()?.n ?? 0;
+      if (active > 0) return { error: "typeLocked", at: Date.now() };
+    }
+    db.update(item)
       .set({ ...values, sortOrder: d.sortOrder })
       .where(eq(item.id, id))
       .run();
-    if (res.changes === 0) return { error: "invalid", at: Date.now() };
     logEdit(db, editor.name, `Ändrade "${d.nameSv}"`);
+    if (before.type !== d.type) {
+      logEdit(db, editor.name, `Ändrade typ på "${d.nameSv}" från ${typeLabel[before.type]} till ${typeLabel[d.type]}`);
+    }
   } else {
     const top = db.select({ m: max(item.sortOrder) }).from(item).get()?.m ?? 0;
     db.insert(item)
-      .values({ ...values, type: "physical", sortOrder: top + 10 })
+      .values({ ...values, sortOrder: top + 10 })
       .run();
-    logEdit(db, editor.name, `Lade till "${d.nameSv}"`);
+    logEdit(db, editor.name, d.type === "physical" ? `Lade till "${d.nameSv}"` : `Lade till ${typeLabel[d.type]}en "${d.nameSv}"`);
   }
   refresh();
   redirect("/admin#items");
@@ -219,6 +247,45 @@ export async function moveItem(formData: FormData) {
     for (const r of next) tx.update(item).set({ sortOrder: r.sortOrder }).where(eq(item.id, r.id)).run();
   });
   logEdit(db, editor.name, `Flyttade "${itemName(db, id)}" ${dir === "up" ? "upp" : "ner"}`);
+  refresh();
+}
+
+/* ---------- Starter list ---------- */
+
+export async function toggleStarterItem(formData: FormData) {
+  const editor = await requireEditor();
+  const id = idFrom(formData);
+  if (!id) return;
+  const db = getDb();
+  const row = db.select({ visible: item.visible, seeded: item.seeded }).from(item).where(eq(item.id, id)).get();
+  if (!row || !row.seeded) return;
+  db.update(item).set({ visible: !row.visible, updatedAt: new Date() }).where(eq(item.id, id)).run();
+  logEdit(db, editor.name, `${row.visible ? "Dolde" : "Visade"} startförslaget "${itemName(db, id)}"`);
+  refresh();
+}
+
+export async function setStarterCategoryVisible(formData: FormData) {
+  const editor = await requireEditor();
+  const visible = formData.get("visible") === "1";
+  const raw = formData.get("categoryId");
+  const categoryId = raw === "none" ? null : Number(raw);
+  if (categoryId !== null && (!Number.isInteger(categoryId) || categoryId < 1)) return;
+  const db = getDb();
+  const ids = db
+    .select({ id: item.id, categoryId: item.categoryId })
+    .from(item)
+    .where(eq(item.seeded, true))
+    .all()
+    .filter((r) => r.categoryId === categoryId)
+    .map((r) => r.id);
+  if (!ids.length) return;
+  const res = db.update(item).set({ visible, updatedAt: new Date() }).where(inArray(item.id, ids)).run();
+  const cat = categoryId ? db.select({ name: category.name }).from(category).where(eq(category.id, categoryId)).get() : null;
+  logEdit(
+    db,
+    editor.name,
+    `${visible ? "Visade" : "Dolde"} alla startförslag i ${cat ? `"${cat.name.sv}"` : "utan kategori"} (${res.changes} st)`,
+  );
   refresh();
 }
 

@@ -24,6 +24,28 @@ export function ntfyMessage(opts: {
   return `${labels[opts.event]}: ${opts.itemName} (${opts.claimed} av ${opts.total})${who}`;
 }
 
+/** Group digits Swedish style with ordinary spaces (notification text, not HTML). */
+function grouped(n: number): string {
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+/**
+ * "Nytt bidrag: Blöjfond 300 kr (3 100 / 5 000)". Sent when a guest confirms a Swish
+ * contribution. Same reveal rule as claims: the name is only added after reveal.
+ */
+export function ntfyContributionMessage(opts: {
+  itemName: string;
+  amount: number;
+  confirmed: number;
+  goal: number;
+  guestName?: string | null;
+  revealed: boolean;
+}): string {
+  const who = opts.revealed && opts.guestName ? ` – ${opts.guestName}` : "";
+  const progress = opts.goal > 0 ? ` (${grouped(opts.confirmed)} / ${grouped(opts.goal)})` : ` (${grouped(opts.confirmed)} kr)`;
+  return `Nytt bidrag: ${opts.itemName} ${grouped(opts.amount)} kr${progress}${who}`;
+}
+
 export function sendNtfy(message: string, topic: string | undefined = process.env.NTFY_TOPIC): void {
   if (!topic) return;
   const url = `https://ntfy.sh/${encodeURIComponent(topic)}`;

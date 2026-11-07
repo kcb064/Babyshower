@@ -38,7 +38,18 @@
     "taken": "Already taken",
     "back": "Back to the list",
     "notes": "Good to know",
-    "notFound": "This item is no longer on the list."
+    "notFound": "This item is no longer on the list.",
+    "typeGroup": "Group gift",
+    "typeFund": "Cash fund",
+    "fundProgress": "{confirmed} of {goal}",
+    "fundPercent": "{percent}%",
+    "fundCount": "{count, plural, =0 {No contributions yet} one {# contribution} other {# contributions}}",
+    "contribute": "Chip in via Swish",
+    "buyWhole": "I'll buy the whole thing",
+    "boughtWhole": "A guest is buying the whole gift",
+    "goalReached": "Goal reached – thank you!",
+    "contributedBy": "Contributions from {names}",
+    "progressLabel": "Raised so far"
   },
   "claim": {
     "title": "Reserve",
@@ -79,7 +90,7 @@
   },
   "myClaims": {
     "title": "My claims",
-    "intro": "These are the things you've reserved from this device.",
+    "intro": "Here you can see what you have reserved or chipped in for on this device.",
     "empty": "You have no claims here yet.",
     "status_reserved": "Reserved",
     "status_purchased": "Bought",
@@ -88,7 +99,13 @@
     "release": "Release",
     "invalidLink": "That link doesn't work. Check that you copied all of it.",
     "linkTitle": "Your link to this page",
-    "linkHelp": "Open it on another device to see your claims there."
+    "linkHelp": "Open it on another device to see your claims there.",
+    "contribution": "Contribution: {amount}",
+    "status_confirmed": "Sent",
+    "status_unconfirmed": "Not confirmed",
+    "markSent": "I've sent it",
+    "swishDetails": "Show Swish details",
+    "unconfirmedHelp": "Removed {date} unless confirmed."
   },
   "admin": {
     "title": "Edit the registry",
@@ -124,14 +141,17 @@
       "location": "Location",
       "mapUrl": "Map link",
       "hostContact": "Host contact",
-      "swish": "Swish number"
+      "swish": "Swish number",
+      "swishHelp": "Used for all funds and group gifts: a mobile number (07x) or a 123 Swish number."
     },
     "categories": {
       "heading": "Categories",
       "add": "Add category",
       "name": "Name",
       "sortOrder": "Order",
-      "deleteConfirm": "Items in this category become uncategorised."
+      "deleteConfirm": "Delete this category?",
+      "count": "{count, plural, =0 {Empty} one {# item} other {# items}}",
+      "deleteDisabled": "Only empty categories can be deleted. Move or delete the items first."
     },
     "items": {
       "heading": "Items",
@@ -167,7 +187,24 @@
       "visible": "Visible to guests",
       "sortOrder": "Order",
       "deleteConfirm": "Delete this item and all its claims?",
-      "back": "Back"
+      "back": "Back",
+      "type": "Type",
+      "typePhysical": "Item",
+      "typeGroup": "Group gift",
+      "typeFund": "Cash fund",
+      "typePhysicalHelp": "Guests reserve it and buy it themselves.",
+      "typeGroupHelp": "A pricier item several guests can Swish towards. Someone can also buy it whole.",
+      "typeFundHelp": "No product, just a goal, e.g. a nappy fund.",
+      "goal": "Goal (SEK)",
+      "goalHelpGroup": "Leave blank to use the price.",
+      "goalHelpFund": "How much you hope to raise.",
+      "fundConfirmed": "Raised",
+      "fundContributors": "Contributions",
+      "fundPending": "Awaiting confirmation",
+      "fundBoughtWhole": "Being bought whole by a guest",
+      "starterHidden": "{count, plural, one {# hidden suggestion is} other {# hidden suggestions are}} in the starter list.",
+      "starterLink": "Open the starter list",
+      "starter": "Starter"
     },
     "log": {
       "heading": "Recent changes",
@@ -175,11 +212,72 @@
     },
     "errors": {
       "invalid": "Check the fields and try again.",
-      "image": "The image must be JPG, PNG, WebP or GIF and at most 5 MB."
+      "image": "The image must be JPG, PNG, WebP or GIF and at most 5 MB.",
+      "swish": "The Swish number must be a mobile number (07x) or a 123 number.",
+      "goal": "Enter a goal in SEK (or a price for the group gift).",
+      "typeLocked": "The type cannot change while there are claims or contributions."
+    },
+    "nav": {
+      "dashboard": "Overview",
+      "starter": "Starter list"
+    },
+    "starter": {
+      "title": "Starter list",
+      "intro": "Suggestions of things most new parents need. Choose which to show – you can edit them like any other item afterwards.",
+      "hiddenNote": "Hidden suggestions are invisible to guests.",
+      "showAll": "Show all in category",
+      "hideAll": "Hide all",
+      "visible": "Shown",
+      "hidden": "Hidden",
+      "show": "Show",
+      "hide": "Hide",
+      "summary": "{visible} of {total} shown",
+      "noCategory": "No category",
+      "empty": "The starter list is empty."
     }
   },
   "errors": {
     "notFoundTitle": "Page not found",
     "notFoundBody": "The link may be old or mistyped."
+  },
+  "contribute": {
+    "title": "Chip in via Swish",
+    "intro": "Pick an amount. On the next page you open Swish with the amount filled in.",
+    "amount": "Amount",
+    "otherAmount": "Other amount (SEK)",
+    "amountHelp": "At least {min}.",
+    "showName": "Show my name to other guests",
+    "showNameHelp": "Otherwise they only see that someone chipped in.",
+    "submit": "Continue to Swish",
+    "closed": "This gift is already fully funded. Thank you!",
+    "noSwish": "Swish has not been set up yet. Please contact the host.",
+    "buyWholeTitle": "Or buy it yourself",
+    "buyWholeHelp": "Would you rather buy the whole gift? Then you reserve it like any other item.",
+    "buyWholeLocked": "Others have already started chipping in, so it can no longer be bought whole.",
+    "errors": {
+      "amount": "Choose an amount of at least {min}.",
+      "unavailable": "This gift is not taking more contributions."
+    }
+  },
+  "swish": {
+    "title": "Almost done!",
+    "intro": "Send {amount} for {name} with Swish. Then tap \"I've sent it\" so your contribution counts.",
+    "open": "Open Swish",
+    "openHelp": "Works on the phone that has the Swish app.",
+    "qrTitle": "On a computer?",
+    "qrHelp": "Open Swish on your phone, tap Scan and point it at the QR code. The number and amount are filled in for you.",
+    "qrAlt": "Swish payment QR code for {amount}",
+    "manualTitle": "Or send it manually",
+    "number": "Swish number",
+    "amount": "Amount",
+    "message": "Message",
+    "copyNumber": "Copy number",
+    "copied": "Copied!",
+    "sent": "I've sent it",
+    "sentHelp": "Your contribution counts once you confirm. Unconfirmed contributions are removed after 24 hours.",
+    "confirmedTitle": "Thank you for chipping in!",
+    "confirmedText": "Your contribution of {amount} for {name} has been recorded.",
+    "expired": "This contribution was never confirmed and has been removed. You can chip in again from the list.",
+    "missing": "The Swish number is missing right now. Please contact the host."
   }
 }

@@ -30,7 +30,7 @@ export async function Header() {
                   lang={l}
                   aria-pressed={locale === l}
                   data-testid={`lang-${l}`}
-                  className={`min-h-9 min-w-9 rounded-[var(--radius)] px-1.5 text-sm font-semibold uppercase tracking-wide ${
+                  className={`min-h-11 min-w-11 rounded-[var(--radius)] px-1.5 text-sm font-semibold uppercase tracking-wide ${
                     locale === l ? "text-ink underline decoration-clay decoration-2 underline-offset-4" : "text-ink-soft hover:text-ink"
                   }`}
                 >

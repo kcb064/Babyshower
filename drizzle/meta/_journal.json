@@ -8,6 +8,13 @@
       "when": 1794007482458,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794008832796,
+      "tag": "0001_phase2_funds_starter",
+      "breakpoints": true
     }
   ]
 }

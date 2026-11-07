@@ -78,6 +78,19 @@ export function buildSwishUrl(opts: { payee: string | null | undefined; amount: 
   return `swish://payment?data=${encodeURIComponent(JSON.stringify(buildSwishPayload(opts)))}`;
 }
 
+/**
+ * Text payload for the Swish app's own QR scanner ("Skanna" inside Swish):
+ * `C<number>;<amount>;<message>;<lock>`. The lock mask starts at 7 (all editable) and subtracts
+ * 1 to lock the number, 2 to lock the amount and 4 to lock the message. We lock number and amount
+ * and leave the message editable, so the mask is 4. Semicolons in the message would break the
+ * field layout, so they are replaced.
+ */
+export function buildSwishQrText(opts: { payee: string | null | undefined; amount: number; message: string }): string {
+  const payload = buildSwishPayload(opts);
+  const message = payload.message.value.replace(/;/g, ",");
+  return `C${payload.payee.value};${payload.amount.value};${message};4`;
+}
+
 /** Short default Swish message, e.g. "Babyshower: Blöjfond". */
 export function swishMessage(itemName: string, locale: "sv" | "en"): string {
   return truncateMessage(`${locale === "sv" ? "Babyshower" : "Baby shower"}: ${itemName}`);

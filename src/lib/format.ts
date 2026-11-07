@@ -44,3 +44,15 @@ export function formatDateTime(value: Date, locale: Locale): string {
     timeZone: "Europe/Stockholm",
   }).format(value);
 }
+
+/** "för 5 minuter sedan" / "5 minutes ago"; falls back to an absolute time after a week. */
+export function formatRelative(value: Date, now: Date, locale: Locale): string {
+  const diffSec = Math.round((value.getTime() - now.getTime()) / 1000);
+  const abs = Math.abs(diffSec);
+  if (abs >= 7 * 24 * 3600) return formatDateTime(value, locale);
+  const rtf = new Intl.RelativeTimeFormat(intlLocale[locale], { numeric: "auto" });
+  if (abs < 45) return rtf.format(0, "second");
+  if (abs < 45 * 60) return rtf.format(Math.round(diffSec / 60), "minute");
+  if (abs < 22 * 3600) return rtf.format(Math.round(diffSec / 3600), "hour");
+  return rtf.format(Math.round(diffSec / 86400), "day");
+}

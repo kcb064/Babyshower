@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatEventDate, formatEventDateTime, formatSEK } from "@/lib/format";
+import { formatDateTime, formatEventDate, formatEventDateTime, formatRelative, formatSEK } from "@/lib/format";
 
 const NBSP = " ";
 
@@ -26,5 +26,20 @@ describe("event date", () => {
   });
   it("returns unparseable input unchanged", () => {
     expect(formatEventDate("snart", "sv")).toBe("snart");
+  });
+});
+
+describe("formatRelative", () => {
+  const now = new Date("2026-11-10T12:00:00Z");
+  it("uses relative words in both languages", () => {
+    expect(formatRelative(new Date(now.getTime() - 10_000), now, "sv")).toBe("nu");
+    expect(formatRelative(new Date(now.getTime() - 5 * 60_000), now, "sv")).toBe("för 5 minuter sedan");
+    expect(formatRelative(new Date(now.getTime() - 3 * 3600_000), now, "en")).toBe("3 hours ago");
+    expect(formatRelative(new Date(now.getTime() - 26 * 3600_000), now, "sv")).toBe("i går");
+  });
+  it("falls back to an absolute time after a week", () => {
+    expect(formatRelative(new Date(now.getTime() - 8 * 86400_000), now, "sv")).toBe(
+      formatDateTime(new Date(now.getTime() - 8 * 86400_000), "sv"),
+    );
   });
 });

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { Bilingual } from "@/lib/i18n";
 
 const createdAt = () =>
@@ -22,6 +22,8 @@ export const registry = sqliteTable("registry", {
   revealedBy: text("revealed_by"),
   coverImage: text("cover_image"),
   swishNumber: text("swish_number"),
+  /** Set once the starter list has been inserted, so a restart never re-adds deleted suggestions. */
+  starterSeededAt: integer("starter_seeded_at", { mode: "timestamp_ms" }),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }),
 });
 
@@ -52,14 +54,16 @@ export const item = sqliteTable(
     categoryId: integer("category_id").references(() => category.id, { onDelete: "set null" }),
     notes: text("notes", { mode: "json" }).$type<Bilingual>(),
     usedOk: integer("used_ok", { mode: "boolean" }).notNull().default(false),
-    goalAmount: integer("goal_amount"), // SEK, for group gifts and funds (phase 2)
+    goalAmount: integer("goal_amount"), // SEK, for group gifts and funds
     sortOrder: integer("sort_order").notNull().default(0),
     visible: integer("visible", { mode: "boolean" }).notNull().default(true),
     seeded: integer("seeded", { mode: "boolean" }).notNull().default(false),
+    /** Stable key of a starter-list suggestion (src/db/starter.ts); null for editor-created items. */
+    starterKey: text("starter_key"),
     createdAt: createdAt(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }),
   },
-  (t) => [index("item_category_idx").on(t.categoryId)],
+  (t) => [index("item_category_idx").on(t.categoryId), uniqueIndex("item_starter_key_idx").on(t.starterKey)],
 );
 
 export const claimStatuses = ["reserved", "purchased", "released"] as const;
@@ -77,7 +81,8 @@ export const claim = sqliteTable(
     guestEmail: text("guest_email").notNull(),
     qty: integer("qty").notNull().default(1),
     status: text("status", { enum: claimStatuses }).notNull().default("reserved"),
-    amount: integer("amount"), // SEK, for fund contributions (phase 2)
+    /** SEK for group-gift / fund contributions; null for a physical claim (incl. "buy the whole gift"). */
+    amount: integer("amount"),
     message: text("message"),
     showName: integer("show_name", { mode: "boolean" }).notNull().default(false),
     address: text("address"),
@@ -85,6 +90,8 @@ export const claim = sqliteTable(
     createdAt: createdAt(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }),
     releasedAt: integer("released_at", { mode: "timestamp_ms" }),
+    /** When the guest pressed "I've sent it" for a Swish contribution. Only confirmed ones count. */
+    confirmedAt: integer("confirmed_at", { mode: "timestamp_ms" }),
   },
   (t) => [index("claim_item_idx").on(t.itemId), index("claim_guest_idx").on(t.guestKey)],
 );

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireEditor } from "@/lib/auth";
 import { signOut } from "../sign-in/actions";
+import { AdminNav } from "./AdminNav";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const editor = await requireEditor();
@@ -23,6 +24,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </form>
         </div>
       </div>
+      <AdminNav
+        label={t("title")}
+        links={[
+          { href: "/admin", text: t("nav.dashboard"), testId: "admin-nav-dashboard" },
+          { href: "/admin/starter", text: t("nav.starter"), testId: "admin-nav-starter" },
+        ]}
+      />
       {children}
     </div>
   );

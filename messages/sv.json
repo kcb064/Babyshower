@@ -38,7 +38,18 @@
     "taken": "Redan tagen",
     "back": "Tillbaka till listan",
     "notes": "Bra att veta",
-    "notFound": "Den här saken finns inte längre på listan."
+    "notFound": "Den här saken finns inte längre på listan.",
+    "typeGroup": "Gruppresent",
+    "typeFund": "Insamling",
+    "fundProgress": "{confirmed} av {goal}",
+    "fundPercent": "{percent} %",
+    "fundCount": "{count, plural, =0 {Inga bidrag än} one {# bidrag} other {# bidrag}}",
+    "contribute": "Bidra via Swish",
+    "buyWhole": "Jag köper hela",
+    "boughtWhole": "En gäst köper hela presenten",
+    "goalReached": "Målet är nått – tack!",
+    "contributedBy": "Bidrag från {names}",
+    "progressLabel": "Insamlat hittills"
   },
   "claim": {
     "title": "Reservera",
@@ -79,7 +90,7 @@
   },
   "myClaims": {
     "title": "Mina reservationer",
-    "intro": "Här ser du det du har reserverat från den här enheten.",
+    "intro": "Här ser du det du har reserverat eller bidragit med från den här enheten.",
     "empty": "Du har inga reservationer här ännu.",
     "status_reserved": "Reserverad",
     "status_purchased": "Köpt",
@@ -88,7 +99,13 @@
     "release": "Släpp reservationen",
     "invalidLink": "Länken fungerar inte. Kontrollera att du kopierade hela länken.",
     "linkTitle": "Din länk till den här sidan",
-    "linkHelp": "Öppna den på en annan enhet för att se dina reservationer där."
+    "linkHelp": "Öppna den på en annan enhet för att se dina reservationer där.",
+    "contribution": "Bidrag: {amount}",
+    "status_confirmed": "Swishat",
+    "status_unconfirmed": "Inte bekräftat",
+    "markSent": "Jag har swishat",
+    "swishDetails": "Visa Swish-uppgifter",
+    "unconfirmedHelp": "Tas bort {date} om det inte bekräftas."
   },
   "admin": {
     "title": "Redigera önskelistan",
@@ -124,14 +141,17 @@
       "location": "Plats",
       "mapUrl": "Länk till karta",
       "hostContact": "Kontakt till värden",
-      "swish": "Swish-nummer"
+      "swish": "Swish-nummer",
+      "swishHelp": "Används för alla insamlingar och gruppresenter: mobilnummer (07x) eller 123-nummer."
     },
     "categories": {
       "heading": "Kategorier",
       "add": "Lägg till kategori",
       "name": "Namn",
       "sortOrder": "Ordning",
-      "deleteConfirm": "Saker i kategorin blir utan kategori."
+      "deleteConfirm": "Ta bort kategorin?",
+      "count": "{count, plural, =0 {Tom} one {# sak} other {# saker}}",
+      "deleteDisabled": "Bara tomma kategorier kan tas bort. Flytta eller ta bort sakerna först."
     },
     "items": {
       "heading": "Saker",
@@ -167,7 +187,24 @@
       "visible": "Synlig för gäster",
       "sortOrder": "Ordning",
       "deleteConfirm": "Ta bort den här saken och alla dess reservationer?",
-      "back": "Tillbaka"
+      "back": "Tillbaka",
+      "type": "Typ",
+      "typePhysical": "Sak",
+      "typeGroup": "Gruppresent",
+      "typeFund": "Insamling",
+      "typePhysicalHelp": "Gäster reserverar och köper själva.",
+      "typeGroupHelp": "En dyrare sak som flera kan swisha till. Någon kan också köpa hela.",
+      "typeFundHelp": "Ingen produkt, bara ett mål, t.ex. blöjfond.",
+      "goal": "Mål (kr)",
+      "goalHelpGroup": "Lämna tomt för att använda priset.",
+      "goalHelpFund": "Hur mycket ni hoppas samla in.",
+      "fundConfirmed": "Insamlat",
+      "fundContributors": "Bidrag",
+      "fundPending": "Väntar på bekräftelse",
+      "fundBoughtWhole": "Köps hel av en gäst",
+      "starterHidden": "{count, plural, one {# dolt förslag} other {# dolda förslag}} finns i startlistan.",
+      "starterLink": "Gå till startlistan",
+      "starter": "Startförslag"
     },
     "log": {
       "heading": "Senaste ändringar",
@@ -175,11 +212,72 @@
     },
     "errors": {
       "invalid": "Kontrollera fälten och försök igen.",
-      "image": "Bilden måste vara JPG, PNG, WebP eller GIF och högst 5 MB."
+      "image": "Bilden måste vara JPG, PNG, WebP eller GIF och högst 5 MB.",
+      "swish": "Swish-numret måste vara ett mobilnummer (07x) eller ett 123-nummer.",
+      "goal": "Ange ett mål i kronor (eller ett pris för gruppresenten).",
+      "typeLocked": "Typen kan inte ändras när det finns reservationer eller bidrag."
+    },
+    "nav": {
+      "dashboard": "Översikt",
+      "starter": "Startlista"
+    },
+    "starter": {
+      "title": "Startlista",
+      "intro": "Förslag på saker som många behöver. Välj vilka ni vill visa – ni kan ändra dem som vanliga saker efteråt.",
+      "hiddenNote": "Dolda förslag syns inte för gästerna.",
+      "showAll": "Visa alla i kategorin",
+      "hideAll": "Dölj alla",
+      "visible": "Visas",
+      "hidden": "Dold",
+      "show": "Visa",
+      "hide": "Dölj",
+      "summary": "{visible} av {total} visas",
+      "noCategory": "Utan kategori",
+      "empty": "Startlistan är tom."
     }
   },
   "errors": {
     "notFoundTitle": "Sidan finns inte",
     "notFoundBody": "Länken kan vara gammal eller felstavad."
+  },
+  "contribute": {
+    "title": "Bidra via Swish",
+    "intro": "Välj ett belopp. På nästa sida öppnar du Swish med beloppet ifyllt.",
+    "amount": "Belopp",
+    "otherAmount": "Annat belopp (kr)",
+    "amountHelp": "Minst {min}.",
+    "showName": "Visa mitt namn för andra gäster",
+    "showNameHelp": "Annars syns bara att någon har bidragit.",
+    "submit": "Gå vidare till Swish",
+    "closed": "Den här presenten är redan fullt finansierad. Tack!",
+    "noSwish": "Swish är inte inställt ännu. Hör av dig till värden.",
+    "buyWholeTitle": "Eller köp hela själv",
+    "buyWholeHelp": "Vill du hellre köpa hela presenten? Då reserverar du den som en vanlig sak.",
+    "buyWholeLocked": "Andra har redan börjat bidra, så den kan inte köpas hel längre.",
+    "errors": {
+      "amount": "Välj ett belopp på minst {min}.",
+      "unavailable": "Den här presenten tar inte emot fler bidrag."
+    }
+  },
+  "swish": {
+    "title": "Nästan klart!",
+    "intro": "Swisha {amount} till {name}. Tryck sedan på \"Jag har swishat\" så räknas ditt bidrag.",
+    "open": "Öppna Swish",
+    "openHelp": "Fungerar på mobilen där Swish-appen finns.",
+    "qrTitle": "Sitter du vid datorn?",
+    "qrHelp": "Öppna Swish på mobilen, tryck på Skanna och rikta kameran mot QR-koden. Nummer och belopp fylls i automatiskt.",
+    "qrAlt": "QR-kod för Swish-betalning på {amount}",
+    "manualTitle": "Eller swisha manuellt",
+    "number": "Swish-nummer",
+    "amount": "Belopp",
+    "message": "Meddelande",
+    "copyNumber": "Kopiera numret",
+    "copied": "Kopierat!",
+    "sent": "Jag har swishat",
+    "sentHelp": "Bidraget räknas när du har bekräftat. Obekräftade bidrag tas bort efter 24 timmar.",
+    "confirmedTitle": "Tack för ditt bidrag!",
+    "confirmedText": "Ditt bidrag på {amount} till {name} är registrerat.",
+    "expired": "Det här bidraget bekräftades aldrig och har tagits bort. Du kan bidra igen från listan.",
+    "missing": "Swish-numret saknas just nu. Hör av dig till värden."
   }
 }
