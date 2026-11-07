@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Work_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Header } from "@/components/Header";
@@ -10,16 +10,24 @@ import "./globals.css";
 
 export const dynamic = "force-dynamic";
 
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
+// Self-hosted variable fonts (SIL Open Font License, via fontsource) so the build never needs
+// to reach Google Fonts. Latin + Latin Extended cover Swedish and English.
+const cormorant = localFont({
+  src: [
+    { path: "../fonts/cormorant-garamond-latin-wght-normal.woff2", weight: "300 700", style: "normal" },
+    { path: "../fonts/cormorant-garamond-latin-ext-wght-normal.woff2", weight: "300 700", style: "normal" },
+    { path: "../fonts/cormorant-garamond-latin-wght-italic.woff2", weight: "300 700", style: "italic" },
+  ],
   variable: "--font-cormorant",
   display: "swap",
 });
 
-const workSans = Work_Sans({
-  subsets: ["latin"],
+const workSans = localFont({
+  src: [
+    { path: "../fonts/work-sans-latin-wght-normal.woff2", weight: "100 900", style: "normal" },
+    { path: "../fonts/work-sans-latin-ext-wght-normal.woff2", weight: "100 900", style: "normal" },
+    { path: "../fonts/work-sans-latin-wght-italic.woff2", weight: "100 900", style: "italic" },
+  ],
   variable: "--font-work-sans",
   display: "swap",
 });
