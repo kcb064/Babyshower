@@ -1,7 +1,11 @@
 services:
   babyshower:
-    build: .
-    image: babyshower:latest
+    # Pre-built image published by .github/workflows/docker.yml on every push.
+    # If the package is private on GitHub, run `docker login ghcr.io` on the server first (see README).
+    image: ghcr.io/kcb064/babyshower:latest
+    pull_policy: always
+    # To build locally instead, comment out `image` + `pull_policy` and uncomment:
+    # build: .
     container_name: babyshower
     restart: unless-stopped
     env_file: .env

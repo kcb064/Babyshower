@@ -98,11 +98,31 @@ Migrations run and default data is seeded automatically on startup.
 
 ## Run with Docker
 
+The image is built by GitHub Actions on every push and published to
+`ghcr.io/kcb064/babyshower:latest` (plus `<branch>` and `<commit sha>` tags).
+`docker-compose.yml` pulls that image, so the server never needs the source tree or a build.
+
 ```sh
 cp .env.example .env   # then edit
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 docker compose logs -f babyshower
 ```
+
+Update later with `docker compose pull && docker compose up -d`.
+
+**If the package is private** (the default for a new GHCR package), log in once on the server with a
+personal access token that has `read:packages`:
+
+```sh
+echo $GHCR_TOKEN | docker login ghcr.io -u kcb064 --password-stdin
+```
+
+Or make the package public: GitHub → your profile → Packages → `babyshower` → Package settings →
+Change visibility. A public package needs no login to pull.
+
+**Building locally instead:** swap `image:`/`pull_policy:` for `build: .` in `docker-compose.yml` and run
+`docker compose up -d --build`.
 
 Data (database, uploads, backups, image cache) lives in the named volume `babyshower-data`. See *Backups* above.
 
