@@ -7,6 +7,14 @@ export interface ScrapedProduct {
   price: number | null;
   currency: string | null;
   description: string | null;
+  /** Page language when the page declares it (html lang or og:locale), limited to our two locales. */
+  lang: "sv" | "en" | null;
+}
+
+/** "sv" / "en" from a lang attribute or og:locale value such as "sv-SE", "en_GB", "en"; null otherwise. */
+export function detectLang(value: string | null | undefined): "sv" | "en" | null {
+  const code = (value ?? "").trim().toLowerCase().split(/[-_]/)[0];
+  return code === "sv" || code === "en" ? code : null;
 }
 
 const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
@@ -169,7 +177,10 @@ export function parseProductHtml(html: string, pageUrl: string): ScrapedProduct 
   }
   description ??= meta.get("og:description") ?? meta.get("description") ?? null;
 
-  return { title, imageUrl, price, currency, description };
+  const htmlTag = /<html\b[^>]*>/i.exec(html);
+  const lang = detectLang(htmlTag ? parseAttributes(htmlTag[0]).lang : null) ?? detectLang(meta.get("og:locale"));
+
+  return { title, imageUrl, price, currency, description, lang };
 }
 
 /** Very small SSRF guard: editors only, but still refuse obvious internal targets. */

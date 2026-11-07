@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeEntities, isFetchableUrl, parsePrice, parseProductHtml } from "@/lib/scrape";
+import { decodeEntities, detectLang, isFetchableUrl, parsePrice, parseProductHtml } from "@/lib/scrape";
 
 const OG_HTML = `<!doctype html><html><head>
 <title>Fallback title | Shop</title>
@@ -40,6 +40,7 @@ describe("parseProductHtml", () => {
       price: 1295,
       currency: "SEK",
       description: "En mysig babynest.",
+      lang: null,
     });
   });
 
@@ -71,12 +72,26 @@ describe("parseProductHtml", () => {
       price: null,
       currency: null,
       description: null,
+      lang: null,
     });
   });
 
   it("ignores non-http image URLs", () => {
     const p = parseProductHtml(`<meta property="og:image" content="javascript:alert(1)">`, "https://example.com");
     expect(p.imageUrl).toBeNull();
+  });
+});
+
+describe("page language", () => {
+  it("reads html lang", () => {
+    expect(parseProductHtml('<html lang="sv-SE"><head><title>X</title></head></html>', "https://e.se").lang).toBe("sv");
+    expect(parseProductHtml('<html lang="en"><head><title>X</title></head></html>', "https://e.com").lang).toBe("en");
+  });
+  it("falls back to og:locale and is null for other languages", () => {
+    expect(parseProductHtml('<html><head><meta property="og:locale" content="sv_SE"></head></html>', "https://e.se").lang).toBe("sv");
+    expect(parseProductHtml('<html lang="de"><head></head></html>', "https://e.de").lang).toBe(null);
+    expect(detectLang("EN-GB")).toBe("en");
+    expect(detectLang(undefined)).toBe(null);
   });
 });
 

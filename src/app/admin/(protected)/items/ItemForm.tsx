@@ -22,7 +22,9 @@ const TRANSLATE_PAIRS: TranslatePair[] = [
 export function ItemForm({ item, categories, translateEnabled = false }: Props) {
   const t = useTranslations("admin");
   const [state, action, pending] = useActionState<FormState, FormData>(saveItem, {});
+  const [nameEn, setNameEn] = useState(item?.name.en ?? "");
   const [nameSv, setNameSv] = useState(item?.name.sv ?? "");
+  const [descriptionEn, setDescriptionEn] = useState(item?.description?.en ?? "");
   const [descriptionSv, setDescriptionSv] = useState(item?.description?.sv ?? "");
   const [storeUrl, setStoreUrl] = useState(item?.storeUrl ?? "");
   const [imageUrl, setImageUrl] = useState(item?.imageUrl ?? "");
@@ -33,11 +35,10 @@ export function ItemForm({ item, categories, translateEnabled = false }: Props) 
   const [fetchStatus, setFetchStatus] = useState<"idle" | "ok" | "failed">("idle");
   const [fetching, startFetch] = useTransition();
 
-  // nameSv and descriptionSv are controlled; update their state directly. The rest are written into the DOM.
+  // Name and description are controlled in both languages; update state directly. Notes are written into the DOM.
   function onTranslated(key: string, lang: "en" | "sv", value: string): boolean {
-    if (lang !== "sv") return false;
-    if (key === "name") setNameSv(value.slice(0, 200));
-    else if (key === "description") setDescriptionSv(value.slice(0, 2000));
+    if (key === "name") (lang === "en" ? setNameEn : setNameSv)(value.slice(0, 200));
+    else if (key === "description") (lang === "en" ? setDescriptionEn : setDescriptionSv)(value.slice(0, 2000));
     else return false;
     return true;
   }
@@ -50,10 +51,15 @@ export function ItemForm({ item, categories, translateEnabled = false }: Props) 
         return;
       }
       const p = res.product;
-      if (p.title) setNameSv(p.title.slice(0, 200));
+      // Put fetched text in the column matching the page's language; English is the default column.
+      const swedish = p.lang === "sv";
+      if (p.title) (swedish ? setNameSv : setNameEn)(p.title.slice(0, 200));
       if (p.imageUrl) setImageUrl(p.imageUrl);
       if (p.price !== null) setPrice(String(p.price));
-      if (p.description && !descriptionSv) setDescriptionSv(p.description.slice(0, 2000));
+      if (p.description) {
+        if (swedish && !descriptionSv) setDescriptionSv(p.description.slice(0, 2000));
+        if (!swedish && !descriptionEn) setDescriptionEn(p.description.slice(0, 2000));
+      }
       setFetchStatus("ok");
     });
   }
@@ -128,7 +134,14 @@ export function ItemForm({ item, categories, translateEnabled = false }: Props) 
           <label className="label" htmlFor="nameEn">
             {t("items.name")} – {t("english")}
           </label>
-          <input id="nameEn" name="nameEn" maxLength={200} defaultValue={item?.name.en ?? ""} className="field" />
+          <input
+            id="nameEn"
+            name="nameEn"
+            maxLength={200}
+            value={nameEn}
+            onChange={(e) => setNameEn(e.target.value)}
+            className="field"
+          />
         </div>
         <div>
           <label className="label" htmlFor="nameSv">
@@ -140,6 +153,20 @@ export function ItemForm({ item, categories, translateEnabled = false }: Props) 
             maxLength={200}
             value={nameSv}
             onChange={(e) => setNameSv(e.target.value)}
+            className="field"
+          />
+        </div>
+        <div>
+          <label className="label" htmlFor="descriptionEn">
+            {t("items.description")} – {t("english")}
+          </label>
+          <textarea
+            id="descriptionEn"
+            name="descriptionEn"
+            rows={3}
+            maxLength={2000}
+            value={descriptionEn}
+            onChange={(e) => setDescriptionEn(e.target.value)}
             className="field"
           />
         </div>
@@ -158,29 +185,16 @@ export function ItemForm({ item, categories, translateEnabled = false }: Props) 
           />
         </div>
         <div>
-          <label className="label" htmlFor="descriptionEn">
-            {t("items.description")} – {t("english")}
+          <label className="label" htmlFor="notesEn">
+            {t("items.notes")} – {t("english")}
           </label>
-          <textarea
-            id="descriptionEn"
-            name="descriptionEn"
-            rows={3}
-            maxLength={2000}
-            defaultValue={item?.description?.en ?? ""}
-            className="field"
-          />
+          <input id="notesEn" name="notesEn" maxLength={1000} defaultValue={item?.notes?.en ?? ""} className="field" />
         </div>
         <div>
           <label className="label" htmlFor="notesSv">
             {t("items.notes")} – {t("swedish")}
           </label>
           <input id="notesSv" name="notesSv" maxLength={1000} defaultValue={item?.notes?.sv ?? ""} className="field" />
-        </div>
-        <div>
-          <label className="label" htmlFor="notesEn">
-            {t("items.notes")} – {t("english")}
-          </label>
-          <input id="notesEn" name="notesEn" maxLength={1000} defaultValue={item?.notes?.en ?? ""} className="field" />
         </div>
       </div>
 

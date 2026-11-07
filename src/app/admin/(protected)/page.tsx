@@ -252,6 +252,11 @@ export default async function AdminPage() {
         </h2>
         <p className="mb-4 mt-1 text-sm text-ink-soft">{t("categories.deleteDisabled")}</p>
         {translateEnabled && <TranslateButton pairs={categoryPairs} className="mb-4" testId="translate-categories" />}
+        <div className="mb-1 hidden gap-2 px-3 text-xs font-medium uppercase tracking-wide text-ink-soft sm:flex" aria-hidden="true">
+          <span className="min-w-0 flex-1 basis-32">{t("english")}</span>
+          <span className="min-w-0 flex-1 basis-32">{t("swedish")}</span>
+          <span className="w-[14.5rem]" />
+        </div>
         <ul className="space-y-2">
           {categories.map((c, idx) => (
             <li key={c.id} className="flex flex-col gap-2 rounded-[var(--radius)] bg-linen p-2 sm:flex-row sm:items-center">
