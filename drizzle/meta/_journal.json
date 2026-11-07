@@ -15,6 +15,13 @@
       "when": 1794008832796,
       "tag": "0001_phase2_funds_starter",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794010083269,
+      "tag": "0002_phase3_reveal_links_thanks",
+      "breakpoints": true
     }
   ]
 }

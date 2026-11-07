@@ -24,6 +24,9 @@ export const registry = sqliteTable("registry", {
   swishNumber: text("swish_number"),
   /** Set once the starter list has been inserted, so a restart never re-adds deleted suggestions. */
   starterSeededAt: integer("starter_seeded_at", { mode: "timestamp_ms" }),
+  /** Last one-time "peek" at the full list before reveal (does not change `revealed`). */
+  lastPeekAt: integer("last_peek_at", { mode: "timestamp_ms" }),
+  lastPeekBy: text("last_peek_by"),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }),
 });
 
@@ -38,6 +41,9 @@ export const itemTypes = ["physical", "group", "fund"] as const;
 export type ItemType = (typeof itemTypes)[number];
 export const priorities = ["must", "nice"] as const;
 export type Priority = (typeof priorities)[number];
+
+export const linkStatuses = ["ok", "dead", "changed"] as const;
+export type LinkStatus = (typeof linkStatuses)[number];
 
 export const item = sqliteTable(
   "item",
@@ -60,6 +66,11 @@ export const item = sqliteTable(
     seeded: integer("seeded", { mode: "boolean" }).notNull().default(false),
     /** Stable key of a starter-list suggestion (src/db/starter.ts); null for editor-created items. */
     starterKey: text("starter_key"),
+    /** Result of the last "check links" run; the editor's own price is never changed by it. */
+    linkCheckedAt: integer("link_checked_at", { mode: "timestamp_ms" }),
+    linkStatus: text("link_status", { enum: linkStatuses }),
+    /** Whole SEK read from the store page at the last check, if it stated one. */
+    scrapedPrice: integer("scraped_price"),
     createdAt: createdAt(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }),
   },
@@ -96,14 +107,19 @@ export const claim = sqliteTable(
   (t) => [index("claim_item_idx").on(t.itemId), index("claim_guest_idx").on(t.guestKey)],
 );
 
-export const thankYou = sqliteTable("thank_you", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  claimId: integer("claim_id")
-    .notNull()
-    .references(() => claim.id, { onDelete: "cascade" }),
-  sentAt: integer("sent_at", { mode: "timestamp_ms" }),
-  note: text("note"),
-});
+export const thankYou = sqliteTable(
+  "thank_you",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    claimId: integer("claim_id")
+      .notNull()
+      .references(() => claim.id, { onDelete: "cascade" }),
+    sentAt: integer("sent_at", { mode: "timestamp_ms" }),
+    note: text("note"),
+  },
+  // One thank-you per gift: ticking "Tackat" upserts, unticking deletes.
+  (t) => [uniqueIndex("thank_you_claim_idx").on(t.claimId)],
+);
 
 export const editorLog = sqliteTable("editor_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -117,3 +133,4 @@ export type Category = typeof category.$inferSelect;
 export type Item = typeof item.$inferSelect;
 export type Claim = typeof claim.$inferSelect;
 export type EditorLog = typeof editorLog.$inferSelect;
+export type ThankYou = typeof thankYou.$inferSelect;
