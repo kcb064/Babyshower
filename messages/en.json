@@ -315,7 +315,18 @@
         "done": "Thanked"
       }
     },
-    "oneLanguage": "Fill in at least one language. The other shows the same text until you translate it."
+    "oneLanguage": "Fill in at least one language. The other shows the same text until you translate it.",
+    "translate": {
+      "button": "Auto-translate empty fields",
+      "help": "Fills the blank language from the one you wrote. Never overwrites text.",
+      "pending": "Translating…",
+      "nothing": "Nothing to translate: fill in one language and leave the other blank.",
+      "errorProvider": "The translation service did not answer. Try again or translate by hand.",
+      "errorTooLong": "The text is too long to translate automatically. Shorten it or translate by hand.",
+      "errorRateLimited": "Too many translations right now. Wait a few minutes and try again.",
+      "errorNoProvider": "Auto-translate is turned off on this server.",
+      "done": "{count, plural, one {Filled # field.} other {Filled # fields.}} Check the text, then save."
+    }
   },
   "errors": {
     "notFoundTitle": "Page not found",

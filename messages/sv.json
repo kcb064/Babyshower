@@ -315,7 +315,18 @@
         "done": "Tackade"
       }
     },
-    "oneLanguage": "Fyll i minst ett språk. Det andra visar samma text tills du översätter."
+    "oneLanguage": "Fyll i minst ett språk. Det andra visar samma text tills du översätter.",
+    "translate": {
+      "button": "Översätt tomma fält automatiskt",
+      "help": "Fyller i det tomma språket utifrån det du skrev. Skriver aldrig över text.",
+      "pending": "Översätter…",
+      "nothing": "Inget att översätta: fyll i ett språk och lämna det andra tomt.",
+      "errorProvider": "Översättningstjänsten svarade inte. Försök igen eller översätt själv.",
+      "errorTooLong": "Texten är för lång för automatisk översättning. Korta ner den eller översätt själv.",
+      "errorRateLimited": "För många översättningar just nu. Vänta några minuter och försök igen.",
+      "errorNoProvider": "Automatisk översättning är avstängd på den här servern.",
+      "done": "{count, plural, one {Fyllde i # fält.} other {Fyllde i # fält.}} Kontrollera texten och spara sedan."
+    }
   },
   "errors": {
     "notFoundTitle": "Sidan finns inte",
