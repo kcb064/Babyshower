@@ -17,6 +17,10 @@
   --ink-soft: #5b5a55;
   --line: #d9d3c5;
   --danger: #9c3b2b;
+  --danger-soft: #f3dcd5;
+  /* Warnings (changed store price, unconfirmed contribution). */
+  --amber-soft: #f5e6c4;
+  --amber-deep: #74500f;
   --radius: 6px;
   --shadow: 0 1px 2px rgb(43 43 43 / 0.06), 0 4px 16px rgb(43 43 43 / 0.05);
 }
@@ -35,6 +39,9 @@
   --color-ink-soft: var(--ink-soft);
   --color-line: var(--line);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-amber-soft: var(--amber-soft);
+  --color-amber-deep: var(--amber-deep);
   --radius-theme: var(--radius);
   --font-heading: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
   --font-body: var(--font-work-sans), "Work Sans", system-ui, sans-serif;

@@ -204,7 +204,9 @@
       "fundBoughtWhole": "Being bought whole by a guest",
       "starterHidden": "{count, plural, one {# hidden suggestion is} other {# hidden suggestions are}} in the starter list.",
       "starterLink": "Open the starter list",
-      "starter": "Starter"
+      "starter": "Starter",
+      "linkDead": "Dead link",
+      "linkPrice": "Price {price} (was {was})"
     },
     "log": {
       "heading": "Recent changes",
@@ -219,7 +221,9 @@
     },
     "nav": {
       "dashboard": "Overview",
-      "starter": "Starter list"
+      "starter": "Starter list",
+      "gifts": "Gifts",
+      "reveal": "Reveal"
     },
     "starter": {
       "title": "Starter list",
@@ -234,6 +238,82 @@
       "summary": "{visible} of {total} shown",
       "noCategory": "No category",
       "empty": "The starter list is empty."
+    },
+    "status": {
+      "revealed": "Revealed {when} by {name}",
+      "notRevealed": "Not revealed yet – surprise mode is on.",
+      "lastPeek": "Last peek: {name}, {when}",
+      "toGifts": "View gifts",
+      "toReveal": "Reveal or peek"
+    },
+    "tools": {
+      "heading": "Tools",
+      "checkLinks": "Check links",
+      "checking": "Checking…",
+      "checkLinksHelp": "Fetches the store page for every visible item and flags dead links and changed prices. Your price is never changed. At most once every 10 minutes.",
+      "checkLinksDone": "Checked {checked, plural, one {# link} other {# links}}: {dead} dead, {changed} with a changed price.",
+      "checkLinksWait": "Links were just checked. Try again in {minutes, plural, one {# minute} other {# minutes}}.",
+      "backup": "Back up now",
+      "backingUp": "Backing up…",
+      "backupHelp": "Saves a copy of the database in the backups folder. This also happens automatically once a day; the newest 14 are kept.",
+      "backupDone": "Saved {name}. {count, plural, one {# copy} other {# copies}} kept.",
+      "backupFailed": "The backup failed. See the server log.",
+      "backupLatest": "Latest copy: {name} ({count} kept)",
+      "backupNone": "No backups yet."
+    },
+    "reveal": {
+      "title": "Reveal and peek",
+      "intro": "This is where you decide when the surprise ends. Until then you only see how much has been reserved and bought.",
+      "doneTitle": "The registry is revealed",
+      "doneText": "{name} revealed the registry {when}. You can now see who gave what.",
+      "toGifts": "Go to gifts",
+      "peekTitle": "Peek once",
+      "peekText": "Shows the full list with names right now, without revealing it for the others. It is logged and shown on the dashboard.",
+      "lastPeek": "Last peek: {name}, {when}",
+      "peekCheckbox": "I understand this spoils the surprise",
+      "peekNeedsConfirm": "Tick the box first.",
+      "peekSubmit": "Peek at the list",
+      "peekShown": "You are peeking. The list disappears when you reload, and the registry is still not revealed.",
+      "revealTitle": "Reveal the registry",
+      "revealText": "Permanent: every editor sees names, emails, messages and addresses, and can tick off thank-you notes. This cannot be undone.",
+      "confirmLabel": "Type REVEAL to confirm",
+      "confirmHelp": "This cannot be undone.",
+      "confirmError": "Type REVEAL (or AVSLÖJA) in the box to confirm.",
+      "revealSubmit": "Reveal the registry"
+    },
+    "gifts": {
+      "title": "Gifts",
+      "empty": "No claims or contributions yet.",
+      "surprise": "Surprise mode is on: only reserved and bought totals are shown here.",
+      "toReveal": "Reveal or peek",
+      "colItem": "Item",
+      "colClaimed": "Reserved",
+      "colPurchased": "Bought",
+      "contributions": "{count, plural, one {# contribution} other {# contributions}}",
+      "typeGroup": "Group gift",
+      "typeFund": "Cash fund",
+      "totalQty": "{claimed} of {total} reserved · {purchased} bought",
+      "totalAmount": "{amount} of {goal} · {count, plural, one {# contribution} other {# contributions}}",
+      "status": {
+        "reserved": "Reserved",
+        "purchased": "Bought",
+        "pending": "Awaiting confirmation"
+      },
+      "showName": "Shows name",
+      "address": "Address",
+      "thanked": "Thanked",
+      "note": "Note",
+      "notePlaceholder": "E.g. card sent",
+      "saveNote": "Save",
+      "thankCount": "{thanked} of {total} thanked",
+      "revealedBy": "Revealed by {name}",
+      "export": "Export CSV",
+      "filterLabel": "Filter",
+      "filter": {
+        "all": "All",
+        "todo": "Not thanked",
+        "done": "Thanked"
+      }
     }
   },
   "errors": {

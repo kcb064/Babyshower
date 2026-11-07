@@ -1,3 +1,4 @@
+import { proxiedImageSrc } from "@/lib/imgsrc";
 import { EucalyptusBranch } from "./Botanical";
 
 export function ItemImage({ src, alt, className = "" }: { src: string | null; alt: string; className?: string }) {
@@ -10,7 +11,7 @@ export function ItemImage({ src, alt, className = "" }: { src: string | null; al
   }
   return (
     <img
-      src={src}
+      src={proxiedImageSrc(src) ?? src}
       alt={alt}
       loading="lazy"
       decoding="async"

@@ -204,7 +204,9 @@
       "fundBoughtWhole": "Köps hel av en gäst",
       "starterHidden": "{count, plural, one {# dolt förslag} other {# dolda förslag}} finns i startlistan.",
       "starterLink": "Gå till startlistan",
-      "starter": "Startförslag"
+      "starter": "Startförslag",
+      "linkDead": "Död länk",
+      "linkPrice": "Pris {price} (var {was})"
     },
     "log": {
       "heading": "Senaste ändringar",
@@ -219,7 +221,9 @@
     },
     "nav": {
       "dashboard": "Översikt",
-      "starter": "Startlista"
+      "starter": "Startlista",
+      "gifts": "Gåvor",
+      "reveal": "Avslöja"
     },
     "starter": {
       "title": "Startlista",
@@ -234,6 +238,82 @@
       "summary": "{visible} av {total} visas",
       "noCategory": "Utan kategori",
       "empty": "Startlistan är tom."
+    },
+    "status": {
+      "revealed": "Avslöjad {when} av {name}",
+      "notRevealed": "Inte avslöjad än – överraskningsläget är på.",
+      "lastPeek": "Senast tittad: {name}, {when}",
+      "toGifts": "Visa gåvorna",
+      "toReveal": "Avslöja eller titta"
+    },
+    "tools": {
+      "heading": "Verktyg",
+      "checkLinks": "Kontrollera länkar",
+      "checking": "Kontrollerar…",
+      "checkLinksHelp": "Hämtar butikssidan för varje synlig sak och markerar döda länkar och ändrade priser. Ert pris ändras aldrig. Högst en gång per 10 minuter.",
+      "checkLinksDone": "Kontrollerade {checked, plural, one {# länk} other {# länkar}}: {dead} döda, {changed} med ändrat pris.",
+      "checkLinksWait": "Länkarna kontrollerades nyss. Försök igen om {minutes, plural, one {# minut} other {# minuter}}.",
+      "backup": "Säkerhetskopiera nu",
+      "backingUp": "Säkerhetskopierar…",
+      "backupHelp": "Sparar en kopia av databasen i backups-mappen. Det görs också automatiskt en gång per dygn; de 14 senaste sparas.",
+      "backupDone": "Sparade {name}. {count, plural, one {# kopia} other {# kopior}} finns nu.",
+      "backupFailed": "Säkerhetskopieringen misslyckades. Se serverloggen.",
+      "backupLatest": "Senaste kopian: {name} ({count} sparade)",
+      "backupNone": "Inga säkerhetskopior ännu."
+    },
+    "reveal": {
+      "title": "Avslöja och titta",
+      "intro": "Här bestämmer ni när överraskningen tar slut. Fram till dess ser ni bara hur mycket som är reserverat och köpt.",
+      "doneTitle": "Listan är avslöjad",
+      "doneText": "{name} avslöjade listan {when}. Nu syns vem som gav vad.",
+      "toGifts": "Till gåvorna",
+      "peekTitle": "Titta en gång",
+      "peekText": "Visar hela listan med namn just nu, utan att avslöja den för de andra. Det loggas och syns på översikten.",
+      "lastPeek": "Senast tittad: {name}, {when}",
+      "peekCheckbox": "Jag förstår att det här förstör överraskningen",
+      "peekNeedsConfirm": "Kryssa i rutan först.",
+      "peekSubmit": "Titta på listan",
+      "peekShown": "Du tittar nu. Listan försvinner när du laddar om sidan, och den är fortfarande inte avslöjad.",
+      "revealTitle": "Avslöja listan",
+      "revealText": "Permanent: alla redaktörer ser namn, e-post, hälsningar och adresser, och kan bocka av tackkort. Det går inte att ångra.",
+      "confirmLabel": "Skriv AVSLÖJA för att bekräfta",
+      "confirmHelp": "Det här kan inte ångras.",
+      "confirmError": "Skriv AVSLÖJA (eller REVEAL) i rutan för att bekräfta.",
+      "revealSubmit": "Avslöja listan"
+    },
+    "gifts": {
+      "title": "Gåvor",
+      "empty": "Inga reservationer eller bidrag ännu.",
+      "surprise": "Överraskningsläget är på: här syns bara hur mycket som är reserverat och köpt.",
+      "toReveal": "Avslöja eller titta",
+      "colItem": "Sak",
+      "colClaimed": "Reserverade",
+      "colPurchased": "Köpta",
+      "contributions": "{count, plural, one {# bidrag} other {# bidrag}}",
+      "typeGroup": "Gruppresent",
+      "typeFund": "Insamling",
+      "totalQty": "{claimed} av {total} reserverade · {purchased} köpta",
+      "totalAmount": "{amount} av {goal} · {count, plural, one {# bidrag} other {# bidrag}}",
+      "status": {
+        "reserved": "Reserverad",
+        "purchased": "Köpt",
+        "pending": "Väntar på bekräftelse"
+      },
+      "showName": "Visar namn",
+      "address": "Adress",
+      "thanked": "Tackat",
+      "note": "Anteckning",
+      "notePlaceholder": "T.ex. kort skickat",
+      "saveNote": "Spara",
+      "thankCount": "{thanked} av {total} tackade",
+      "revealedBy": "Avslöjad av {name}",
+      "export": "Exportera CSV",
+      "filterLabel": "Filtrera",
+      "filter": {
+        "all": "Alla",
+        "todo": "Inte tackade",
+        "done": "Tackade"
+      }
     }
   },
   "errors": {

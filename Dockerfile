@@ -32,8 +32,10 @@ COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
 # Migrations are applied automatically at startup (also traced into standalone; copied to be explicit).
 COPY --from=build --chown=node:node /app/drizzle ./drizzle
+# Manual backups: `docker exec babyshower node scripts/backup.mjs` (better-sqlite3 is in standalone node_modules).
+COPY --from=build --chown=node:node /app/scripts ./scripts
 
-RUN mkdir -p /data/uploads && chown -R node:node /data
+RUN mkdir -p /data/uploads /data/backups /data/imgcache && chown -R node:node /data
 USER node
 VOLUME /data
 EXPOSE 3000

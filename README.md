@@ -30,6 +30,56 @@ when a contribution is confirmed.
 first start. Pick what to show at `/admin/starter` (per item or per category). Seeding runs once:
 deleted suggestions do not come back on restart.
 
+## Reveal, peek and the gift list
+
+- **`/admin/reveal` → Avslöja listan** is permanent. Type `AVSLÖJA` (or `REVEAL`) in the box and press the
+  button; it records who and when, writes the editor log and sends the ntfy push
+  "Listan är avslöjad av <namn>". After that every editor sees names, emails, messages and addresses.
+- **Titta en gång (peek)** shows the full list once without revealing it: tick "Jag förstår att det här
+  förstör överraskningen" and submit. The list is only in that response (`Cache-Control: no-store`,
+  gone on reload), the peek is logged ("Peek by <namn>") and the dashboard shows
+  "Senast tittad: <namn>, <när>" so the others know. `revealed` stays false.
+- **`/admin/gifts`**: before reveal only the aggregate table. After reveal, every claim and contribution
+  grouped by item with totals (funds list each contribution, unconfirmed Swish ones as "Väntar på
+  bekräftelse"), plus a **Tackat** checkbox per gift with an optional note, filters
+  (Alla / Inte tackade / Tackade) and "12 av 30 tackade". The dashboard also lists who gave what.
+- **CSV export** `/admin/gifts/export.csv` (editors only, 403 before reveal): UTF-8 with BOM, `;`
+  separator (Swedish Excel opens it directly with å/ä/ö), ISO dates. Columns: Sak, Typ, Namn, E-post,
+  Antal, Belopp (kr), Status, Hälsning, Adress, Visa namn, Skapad, Tackad, Tackanteckning. Free text
+  starting with `= + - @` is prefixed with `'` so Excel never runs it as a formula.
+
+## Link check, image proxy
+
+- **Kontrollera länkar** (Verktyg on `/admin`) re-fetches the store page of every visible item with a link
+  (5 at a time, 8 s timeout, at most once per 10 minutes) and stores `link_status`, `link_checked_at`
+  and `scraped_price`. The item list then shows a red **Död länk** (404/410/5xx, timeout, network error)
+  or an amber **Pris 1 195 kr (var 1 295 kr)** when the store price differs by 5 % or more. Bot walls
+  (401/403/429) count as ok. Your own price is never changed; changing the store link clears the result.
+  There is no scheduler: press the button when you want a check.
+- **Image proxy**: scraped external images are shown via `/api/img?u=<url>`, which only serves URLs that
+  are some item's `imageUrl` (http/https, no internal hosts), passes through `image/*` only (no SVG),
+  caps at 5 MB, caches on disk under `DATA_DIR/imgcache/<sha256(url)>` and sends 7-day cache headers.
+  Uploaded images keep `/api/uploads/…`.
+
+## Backups
+
+The server writes `${DATA_DIR}/backups/registry-YYYYMMDD-HHMM.db` (UTC) with better-sqlite3's online
+`.backup()` 60 s after start and then every 24 h (production only), keeping the newest 14. Run one by hand:
+
+- **Säkerhetskopiera nu** under Verktyg on `/admin` (shows the file name and how many are kept), or
+- `pnpm backup` locally / `docker exec babyshower node scripts/backup.mjs` in Docker.
+
+Copy the backups out of the Docker volume and restore one:
+
+```sh
+docker cp babyshower:/data/backups ./backups
+# restore: stop the app, put the copy back as /data/registry.db, start again
+# (if /data/registry.db-wal and -shm exist, remove them first, e.g. from a throwaway container on the volume)
+docker compose stop babyshower
+docker cp ./backups/registry-20261206-0300.db babyshower:/data/registry.db
+docker compose start babyshower
+```
+
 ## Environment
 
 Copy `.env.example` to `.env` and fill it in.
@@ -41,7 +91,7 @@ Copy `.env.example` to `.env` and fill it in.
 | `NTFY_TOPIC` | no | Secret ntfy.sh topic for push notices on claim / purchase / release. Empty disables. |
 | `PUBLIC_URL` | no | Public tunnel URL, used for the durable "my claims" link. Falls back to request host. |
 | `DATABASE_PATH` | no | SQLite file (default `./data/registry.db`, `/data/registry.db` in Docker) |
-| `DATA_DIR` | no | Uploads go to `DATA_DIR/uploads` (default `./data`, `/data` in Docker) |
+| `DATA_DIR` | no | `uploads/`, `backups/` and `imgcache/` live here (default `./data`, `/data` in Docker) |
 
 The server refuses to start in production without `EDITOR_PASSCODE` and `COOKIE_SECRET`.
 Migrations run and default data is seeded automatically on startup.
@@ -54,7 +104,7 @@ docker compose up -d --build
 docker compose logs -f babyshower
 ```
 
-Data (database + uploads) lives in the named volume `babyshower-data`. Backup = copy `/data/registry.db`.
+Data (database, uploads, backups, image cache) lives in the named volume `babyshower-data`. See *Backups* above.
 
 ### Routing the existing Cloudflare Tunnel
 
@@ -74,6 +124,7 @@ Set `PUBLIC_URL` to that hostname (e.g. `https://shower.example.se`).
 pnpm install
 pnpm dev            # http://localhost:3000, passcode "dev" if EDITOR_PASSCODE is unset
 pnpm db:generate    # after editing src/db/schema.ts
+pnpm backup         # one-off backup of DATABASE_PATH into DATA_DIR/backups
 ```
 
 ## Tests
@@ -81,7 +132,8 @@ pnpm db:generate    # after editing src/db/schema.ts
 ```sh
 pnpm typecheck      # tsc --noEmit
 pnpm lint           # eslint
-pnpm test           # vitest unit tests (claims, funds, Swish, starter seed, SEK, i18n, cookies, scraper, ntfy)
+pnpm test           # vitest unit tests (claims, funds, Swish, starter seed, SEK, i18n, cookies, scraper, ntfy,
+                    #   reveal/peek rules, thank-yous, CSV, link check, backup retention, image proxy)
 pnpm test:e2e       # builds, starts the standalone server on :3100 with a temp DB and EDITOR_PASSCODE=test
 pnpm build
 ```

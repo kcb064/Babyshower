@@ -188,3 +188,49 @@ export function isFetchableUrl(raw: string): boolean {
   if (!host.includes(".")) return false;
   return true;
 }
+
+export const MAX_HTML_BYTES = 3 * 1024 * 1024;
+
+export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
+
+export type FetchHtmlResult =
+  | { ok: true; status: number; url: string; html: string }
+  | { ok: false; status: number | null; error: "http" | "network" | "timeout" };
+
+/** GET a store page (8 s timeout, 3 MB cap). Never throws. */
+export async function fetchHtml(
+  url: string,
+  opts: { fetchImpl?: FetchLike; timeoutMs?: number } = {},
+): Promise<FetchHtmlResult> {
+  const doFetch = opts.fetchImpl ?? fetch;
+  try {
+    const res = await doFetch(url, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(opts.timeoutMs ?? 8000),
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; BabyshowerRegistry/1.0; +link preview)",
+        Accept: "text/html,application/xhtml+xml",
+        "Accept-Language": "sv-SE,sv;q=0.9,en;q=0.8",
+      },
+    });
+    if (!res.ok) {
+      await res.body?.cancel().catch(() => {});
+      return { ok: false, status: res.status, error: "http" };
+    }
+    if (!res.body) return { ok: true, status: res.status, url: res.url || url, html: "" };
+    const reader = res.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (total < MAX_HTML_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      total += value.byteLength;
+    }
+    await reader.cancel().catch(() => {});
+    return { ok: true, status: res.status, url: res.url || url, html: new TextDecoder().decode(Buffer.concat(chunks)) };
+  } catch (err) {
+    const name = err instanceof Error ? err.name : "";
+    return { ok: false, status: null, error: name === "TimeoutError" || name === "AbortError" ? "timeout" : "network" };
+  }
+}

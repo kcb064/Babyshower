@@ -9,7 +9,10 @@ import { category, claim, item, registry, type ItemType } from "@/db/schema";
 import { requireEditor } from "@/lib/auth";
 import { serverEnv } from "@/lib/env";
 import { bilingual, t2 } from "@/lib/i18n";
-import { isFetchableUrl, parseProductHtml, type ScrapedProduct } from "@/lib/scrape";
+import { fetchHtml, isFetchableUrl, parseProductHtml, type ScrapedProduct } from "@/lib/scrape";
+import { backupNow } from "@/lib/backup";
+import { checkLinks, LINKCHECK_COOLDOWN_MS } from "@/lib/linkcheck";
+import { RateLimiter } from "@/lib/rate-limit";
 import { saveImageUpload } from "@/lib/uploads";
 import { categorySchema, formToObject, itemSchema, registrySchema } from "@/lib/validation";
 
@@ -180,7 +183,7 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
   };
 
   if (id) {
-    const before = db.select({ type: item.type }).from(item).where(eq(item.id, id)).get();
+    const before = db.select({ type: item.type, storeUrl: item.storeUrl }).from(item).where(eq(item.id, id)).get();
     if (!before) return { error: "invalid", at: Date.now() };
     if (before.type !== d.type) {
       // Changing type under live claims would turn reservations into money (or back): refuse.
@@ -192,8 +195,10 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
           .get()?.n ?? 0;
       if (active > 0) return { error: "typeLocked", at: Date.now() };
     }
+    // A new store link has not been checked yet: drop the old link-check result.
+    const linkReset = before.storeUrl !== values.storeUrl ? { linkStatus: null, linkCheckedAt: null, scrapedPrice: null } : {};
     db.update(item)
-      .set({ ...values, sortOrder: d.sortOrder })
+      .set({ ...values, ...linkReset, sortOrder: d.sortOrder })
       .where(eq(item.id, id))
       .run();
     logEdit(db, editor.name, `Ändrade "${d.nameSv}"`);
@@ -208,7 +213,9 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
     logEdit(db, editor.name, d.type === "physical" ? `Lade till "${d.nameSv}"` : `Lade till ${typeLabel[d.type]}en "${d.nameSv}"`);
   }
   refresh();
-  redirect("/admin#items");
+  // A redirect from a server action drops the #fragment, so the dashboard scrolls to #items
+  // itself when it sees ?saved=1 (see ScrollToItems).
+  redirect("/admin?saved=1#items");
 }
 
 export async function deleteItem(formData: FormData) {
@@ -293,37 +300,74 @@ export async function setStarterCategoryVisible(formData: FormData) {
 
 export type FetchResult = { ok: true; product: ScrapedProduct } | { ok: false };
 
-const MAX_HTML_BYTES = 3 * 1024 * 1024;
-
 export async function fetchFromLink(url: string): Promise<FetchResult> {
   await requireEditor();
   if (typeof url !== "string" || !isFetchableUrl(url.trim())) return { ok: false };
-  try {
-    const res = await fetch(url.trim(), {
-      redirect: "follow",
-      signal: AbortSignal.timeout(8000),
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; BabyshowerRegistry/1.0; +link preview)",
-        Accept: "text/html,application/xhtml+xml",
-        "Accept-Language": "sv-SE,sv;q=0.9,en;q=0.8",
-      },
-    });
-    if (!res.ok || !res.body) return { ok: false };
-    const reader = res.body.getReader();
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    while (total < MAX_HTML_BYTES) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      total += value.byteLength;
+  const page = await fetchHtml(url.trim());
+  if (!page.ok) return { ok: false };
+  const product = parseProductHtml(page.html, page.url);
+  if (!product.title && !product.imageUrl && product.price === null) return { ok: false };
+  return { ok: true, product };
+}
+
+/* ---------- Dead-link and price check ---------- */
+
+export type LinkCheckState =
+  | { status: "idle" }
+  | { status: "done"; checked: number; dead: number; changed: number; at: number }
+  | { status: "rateLimited"; minutes: number; at: number };
+
+const globalForLinks = globalThis as unknown as { __linkCheckLimiter?: RateLimiter; __linkCheckLast?: number };
+const linkLimiter = (globalForLinks.__linkCheckLimiter ??= new RateLimiter(1, LINKCHECK_COOLDOWN_MS));
+
+export async function checkLinksAction(): Promise<LinkCheckState> {
+  const editor = await requireEditor();
+  const now = Date.now();
+  if (!linkLimiter.attempt("all", now)) {
+    const waitMs = LINKCHECK_COOLDOWN_MS - (now - (globalForLinks.__linkCheckLast ?? now));
+    return { status: "rateLimited", minutes: Math.max(1, Math.ceil(waitMs / 60000)), at: now };
+  }
+  globalForLinks.__linkCheckLast = now;
+  const db = getDb();
+  const targets = db
+    .select({ id: item.id, storeUrl: item.storeUrl, price: item.price })
+    .from(item)
+    .where(eq(item.visible, true))
+    .all()
+    .filter((r): r is { id: number; storeUrl: string; price: number | null } => !!r.storeUrl);
+  const results = await checkLinks(targets);
+  const checkedAt = new Date();
+  db.transaction((tx) => {
+    for (const r of results) {
+      tx.update(item)
+        .set({ linkStatus: r.status, linkCheckedAt: checkedAt, scrapedPrice: r.scrapedPrice })
+        .where(eq(item.id, r.id))
+        .run();
     }
-    await reader.cancel().catch(() => {});
-    const html = new TextDecoder().decode(Buffer.concat(chunks));
-    const product = parseProductHtml(html, res.url || url);
-    if (!product.title && !product.imageUrl && product.price === null) return { ok: false };
-    return { ok: true, product };
-  } catch {
-    return { ok: false };
+  });
+  const dead = results.filter((r) => r.status === "dead").length;
+  const changed = results.filter((r) => r.status === "changed").length;
+  logEdit(db, editor.name, `Kontrollerade ${results.length} länkar (${dead} döda, ${changed} med ändrat pris)`);
+  refresh();
+  return { status: "done", checked: results.length, dead, changed, at: now };
+}
+
+/* ---------- Backups ---------- */
+
+export type BackupState =
+  | { status: "idle" }
+  | { status: "done"; name: string; count: number; at: number }
+  | { status: "failed"; at: number };
+
+export async function backupNowAction(): Promise<BackupState> {
+  const editor = await requireEditor();
+  try {
+    const res = await backupNow();
+    logEdit(getDb(), editor.name, `Säkerhetskopierade databasen (${res.name})`);
+    revalidatePath("/admin");
+    return { status: "done", name: res.name, count: res.count, at: Date.now() };
+  } catch (err) {
+    console.error("[backup] failed:", err instanceof Error ? err.message : err);
+    return { status: "failed", at: Date.now() };
   }
 }

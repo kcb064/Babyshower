@@ -7,7 +7,7 @@ import * as schema from "./schema";
 import { seed } from "./seed";
 import { seedStarter } from "./starter";
 
-export type DB = BetterSQLite3Database<typeof schema>;
+export type DB = BetterSQLite3Database<typeof schema> & { $client: Database.Database };
 
 const globalForDb = globalThis as unknown as { __registryDb?: { db: DB; path: string } };
 
