@@ -168,8 +168,8 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
   const values = {
     type: d.type,
     name: bilingual(d.nameSv, d.nameEn),
-    description: d.descriptionSv ? bilingual(d.descriptionSv, d.descriptionEn) : null,
-    notes: d.notesSv ? bilingual(d.notesSv, d.notesEn) : null,
+    description: d.descriptionSv || d.descriptionEn ? bilingual(d.descriptionSv, d.descriptionEn) : null,
+    notes: d.notesSv || d.notesEn ? bilingual(d.notesSv, d.notesEn) : null,
     imageUrl: isFund ? null : imageUrl,
     storeUrl: isFund ? null : d.storeUrl,
     price: isFund ? null : d.price,

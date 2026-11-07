@@ -10,12 +10,7 @@ export function RegistryForm({ registry }: { registry: Registry }) {
   const [state, action, pending] = useActionState<FormState, FormData>(updateRegistry, {});
   return (
     <form action={action} className="grid gap-4 sm:grid-cols-2">
-      <div>
-        <label className="label" htmlFor="titleSv">
-          {t("registry.title")} – {t("swedish")}
-        </label>
-        <input id="titleSv" name="titleSv" required defaultValue={registry.title.sv} className="field" />
-      </div>
+      <p className="help sm:col-span-2">{t("oneLanguage")}</p>
       <div>
         <label className="label" htmlFor="titleEn">
           {t("registry.title")} – {t("english")}
@@ -23,16 +18,22 @@ export function RegistryForm({ registry }: { registry: Registry }) {
         <input id="titleEn" name="titleEn" defaultValue={registry.title.en ?? ""} className="field" />
       </div>
       <div>
-        <label className="label" htmlFor="welcomeSv">
-          {t("registry.welcome")} – {t("swedish")}
+        <label className="label" htmlFor="titleSv">
+          {t("registry.title")} – {t("swedish")}
         </label>
-        <textarea id="welcomeSv" name="welcomeSv" rows={4} defaultValue={registry.welcome.sv} className="field" />
+        <input id="titleSv" name="titleSv" defaultValue={registry.title.sv ?? ""} className="field" />
       </div>
       <div>
         <label className="label" htmlFor="welcomeEn">
           {t("registry.welcome")} – {t("english")}
         </label>
         <textarea id="welcomeEn" name="welcomeEn" rows={4} defaultValue={registry.welcome.en ?? ""} className="field" />
+      </div>
+      <div>
+        <label className="label" htmlFor="welcomeSv">
+          {t("registry.welcome")} – {t("swedish")}
+        </label>
+        <textarea id="welcomeSv" name="welcomeSv" rows={4} defaultValue={registry.welcome.sv ?? ""} className="field" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>

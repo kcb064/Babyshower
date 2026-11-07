@@ -8,25 +8,29 @@ describe("t2", () => {
     expect(t2({ sv: "Babynest", en: "Baby nest" }, "en")).toBe("Baby nest");
     expect(t2({ sv: "Babynest", en: "Baby nest" }, "sv")).toBe("Babynest");
   });
-  it("falls back to Swedish when English is missing or blank", () => {
+  it("falls back to the other language when the active one is missing or blank", () => {
     expect(t2({ sv: "Blöjfond" }, "en")).toBe("Blöjfond");
     expect(t2({ sv: "Blöjfond", en: "" }, "en")).toBe("Blöjfond");
     expect(t2({ sv: "Blöjfond", en: "   " }, "en")).toBe("Blöjfond");
     expect(t2({ sv: "Blöjfond", en: null }, "en")).toBe("Blöjfond");
+    expect(t2({ en: "Diaper fund" }, "sv")).toBe("Diaper fund");
+    expect(t2({ sv: "", en: "Diaper fund" }, "sv")).toBe("Diaper fund");
+    expect(t2({}, "sv")).toBe("");
   });
   it("handles null fields", () => {
     expect(t2(null, "sv")).toBe("");
   });
   it("bilingual() drops a blank English half", () => {
     expect(bilingual(" Sova ", " ")).toEqual({ sv: "Sova" });
+    expect(bilingual("", "Sleep")).toEqual({ en: "Sleep" });
     expect(bilingual("Sova", "Sleep")).toEqual({ sv: "Sova", en: "Sleep" });
   });
 });
 
 describe("locales", () => {
   it("defaults to Swedish", () => {
-    expect(normalizeLocale(undefined)).toBe("sv");
-    expect(normalizeLocale("de")).toBe("sv");
+    expect(normalizeLocale(undefined)).toBe("en");
+    expect(normalizeLocale("de")).toBe("en");
     expect(normalizeLocale("en")).toBe("en");
   });
 

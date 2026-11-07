@@ -16,7 +16,7 @@ Status: built (2026-11-07). All three phases are on branch `ccr-161763d9-uprse4`
 - **Stack:** no preference; see recommendation in section 6.
 
 Round 3 (2026-11-06):
-- **Language:** Swedish and English with a toggle. Swedish is the default. All UI strings in a translation file; editor enters item names and welcome text in both languages, English falls back to Swedish if blank.
+- **Language:** English and Swedish with a toggle. English is the default (changed 2026-11-07, was Swedish). All UI strings in a translation file; editor enters item names and welcome text in either or both languages, and a blank half falls back to the other.
 - **Currency:** SEK only, formatted Swedish style (`1 295 kr`).
 - **Hosting:** owner's Docker server behind an existing Cloudflare Tunnel. See 6.1 for why.
 - **Editor sign-in:** one shared passcode (environment variable), long-lived cookie. No Google.

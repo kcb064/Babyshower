@@ -131,7 +131,7 @@
     "moveUp": "Flytta upp",
     "moveDown": "Flytta ner",
     "swedish": "Svenska",
-    "english": "Engelska (valfritt)",
+    "english": "Engelska",
     "registry": {
       "heading": "Om babyshowern",
       "title": "Rubrik",
@@ -314,7 +314,8 @@
         "todo": "Inte tackade",
         "done": "Tackade"
       }
-    }
+    },
+    "oneLanguage": "Fyll i minst ett språk. Det andra visar samma text tills du översätter."
   },
   "errors": {
     "notFoundTitle": "Sidan finns inte",

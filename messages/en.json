@@ -131,7 +131,7 @@
     "moveUp": "Move up",
     "moveDown": "Move down",
     "swedish": "Swedish",
-    "english": "English (optional)",
+    "english": "English",
     "registry": {
       "heading": "About the shower",
       "title": "Title",
@@ -314,7 +314,8 @@
         "todo": "Not thanked",
         "done": "Thanked"
       }
-    }
+    },
+    "oneLanguage": "Fill in at least one language. The other shows the same text until you translate it."
   },
   "errors": {
     "notFoundTitle": "Page not found",

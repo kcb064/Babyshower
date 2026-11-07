@@ -251,16 +251,15 @@ export default async function AdminPage() {
                 <input type="hidden" name="id" value={c.id} />
                 <input type="hidden" name="sortOrder" value={c.sortOrder} />
                 <input
-                  name="nameSv"
-                  defaultValue={c.name.sv}
-                  required
-                  aria-label={`${t("categories.name")} – ${t("swedish")}`}
-                  className="field min-w-0 flex-1 basis-32"
-                />
-                <input
                   name="nameEn"
                   defaultValue={c.name.en ?? ""}
                   aria-label={`${t("categories.name")} – ${t("english")}`}
+                  className="field min-w-0 flex-1 basis-32"
+                />
+                <input
+                  name="nameSv"
+                  defaultValue={c.name.sv ?? ""}
+                  aria-label={`${t("categories.name")} – ${t("swedish")}`}
                   className="field min-w-0 flex-1 basis-32"
                 />
                 <button type="submit" className="btn btn-secondary btn-small">
@@ -307,16 +306,15 @@ export default async function AdminPage() {
         </ul>
         <form action={addCategory} className="mt-4 flex flex-wrap items-center gap-2">
           <input
-            name="nameSv"
-            required
-            placeholder={t("swedish")}
-            aria-label={`${t("categories.name")} – ${t("swedish")}`}
-            className="field min-w-0 flex-1 basis-32"
-          />
-          <input
             name="nameEn"
             placeholder={t("english")}
             aria-label={`${t("categories.name")} – ${t("english")}`}
+            className="field min-w-0 flex-1 basis-32"
+          />
+          <input
+            name="nameSv"
+            placeholder={t("swedish")}
+            aria-label={`${t("categories.name")} – ${t("swedish")}`}
             className="field min-w-0 flex-1 basis-32"
           />
           <button type="submit" className="btn btn-primary btn-small">

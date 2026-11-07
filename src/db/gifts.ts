@@ -7,7 +7,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import type { DB } from "./index";
 import { claim, item, registry, thankYou, type ItemType } from "./schema";
 import { getRegistry, goalFor, logEdit, releaseExpired } from "./queries";
-import type { Bilingual } from "@/lib/i18n";
+import { t2, type Bilingual } from "@/lib/i18n";
 import { effectiveStatus } from "@/lib/claims";
 
 /** reserved / purchased as usual; "pending" is a Swish contribution not yet confirmed by the guest. */
@@ -179,7 +179,7 @@ export function setThanked(
   } else {
     db.delete(thankYou).where(eq(thankYou.claimId, claimId)).run();
   }
-  return { ok: true, guestName: row.guestName, itemName: row.itemName.sv };
+  return { ok: true, guestName: row.guestName, itemName: t2(row.itemName, "sv") };
 }
 
 export function thankCounts(rows: readonly GiftRow[]): { thanked: number; total: number } {

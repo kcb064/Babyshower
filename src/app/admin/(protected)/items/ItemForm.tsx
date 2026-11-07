@@ -105,6 +105,13 @@ export function ItemForm({ item, categories }: Props) {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
+        <p className="help sm:col-span-2">{t("oneLanguage")}</p>
+        <div>
+          <label className="label" htmlFor="nameEn">
+            {t("items.name")} – {t("english")}
+          </label>
+          <input id="nameEn" name="nameEn" maxLength={200} defaultValue={item?.name.en ?? ""} className="field" />
+        </div>
         <div>
           <label className="label" htmlFor="nameSv">
             {t("items.name")} – {t("swedish")}
@@ -112,18 +119,11 @@ export function ItemForm({ item, categories }: Props) {
           <input
             id="nameSv"
             name="nameSv"
-            required
             maxLength={200}
             value={nameSv}
             onChange={(e) => setNameSv(e.target.value)}
             className="field"
           />
-        </div>
-        <div>
-          <label className="label" htmlFor="nameEn">
-            {t("items.name")} – {t("english")}
-          </label>
-          <input id="nameEn" name="nameEn" maxLength={200} defaultValue={item?.name.en ?? ""} className="field" />
         </div>
         <div>
           <label className="label" htmlFor="descriptionSv">

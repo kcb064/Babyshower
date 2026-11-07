@@ -1,6 +1,6 @@
 # Babyshower registry
 
-A small, self-hosted baby shower wish list (Swedish/English) for one event. Guests open a public
+A small, self-hosted baby shower wish list (English by default, Swedish toggle) for one event. Guests open a public
 link, reserve gifts with name + email (no account), and can release or mark them as bought from
 "Mina reservationer". Editors share one passcode. Surprise mode hides who claimed what from the
 editors until reveal. Theme: Little Botanist. See `PLAN.md` for the full spec.

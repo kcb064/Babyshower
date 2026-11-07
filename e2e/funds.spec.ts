@@ -9,6 +9,8 @@ const amountRe = (a: string, b: string) => new RegExp(`${a.replace(" ", "\\s")}\
 
 async function newPage(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  // The UI defaults to English; these flows assert Swedish copy, so pin the locale cookie.
+  await ctx.addCookies([{ name: "NEXT_LOCALE", value: "sv", url: `http://localhost:${process.env.E2E_PORT ?? 3100}` }]);
   return { ctx, page: await ctx.newPage() };
 }
 
@@ -32,7 +34,8 @@ function card(page: Page, name: string) {
   return page.getByTestId("item-card").filter({ hasText: name });
 }
 
-test("Swish number is validated in settings", async ({ page }) => {
+test("Swish number is validated in settings", async ({ browser }) => {
+  const { ctx, page } = await newPage(browser);
   await signIn(page);
   await page.getByLabel("Swish-nummer").fill("08-123 45 67");
   await page.getByTestId("save-registry").click();
@@ -40,6 +43,7 @@ test("Swish number is validated in settings", async ({ page }) => {
   await setSwish(page, "+46 70-123 45 67");
   await page.reload();
   await expect(page.getByLabel("Swish-nummer")).toHaveValue("0701234567");
+  await ctx.close();
 });
 
 test("cash fund: contribute 300 via Swish, confirm, progress and admin aggregate", async ({ browser }) => {
@@ -52,7 +56,7 @@ test("cash fund: contribute 300 via Swish, confirm, progress and admin aggregate
   await ep.getByTestId("type-fund").check();
   await expect(ep.getByLabel("Länk till butik")).toHaveCount(0);
   await ep.getByLabel("Namn – Svenska").fill(FUND);
-  await ep.getByLabel("Namn – Engelska (valfritt)").fill("Nappy fund");
+  await ep.getByLabel("Namn – Engelska").fill("Nappy fund");
   await ep.getByLabel("Mål (kr)").fill("5000");
   await ep.getByTestId("save-item").click();
   await expect(ep).toHaveURL(/\/admin(#items)?$/);
@@ -138,7 +142,8 @@ test("contribution can be confirmed later from my claims", async ({ browser }) =
   await guest.ctx.close();
 });
 
-test("amount below 20 kr is refused", async ({ page }) => {
+test("amount below 20 kr is refused", async ({ browser }) => {
+  const { ctx, page } = await newPage(browser);
   await page.goto("/");
   await card(page, FUND).getByTestId("contribute-link").click();
   await page.getByTestId("contribution-amount").fill("10");
@@ -146,6 +151,7 @@ test("amount below 20 kr is refused", async ({ page }) => {
   await page.getByLabel("Din e-post").fill("olle@example.com");
   await page.getByTestId("contribution-submit").click();
   await expect(page.getByText(/Välj ett belopp på minst 20\skr/)).toBeVisible();
+  await ctx.close();
 });
 
 test("group gift: buy the whole thing covers the goal", async ({ browser }) => {

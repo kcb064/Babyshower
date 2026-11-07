@@ -9,6 +9,8 @@ const ADDRESS = "Lingonvägen 3, 123 45 Ås";
 
 async function newPage(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  // The UI defaults to English; these flows assert Swedish copy, so pin the locale cookie.
+  await ctx.addCookies([{ name: "NEXT_LOCALE", value: "sv", url: `http://localhost:${process.env.E2E_PORT ?? 3100}` }]);
   return { ctx, page: await ctx.newPage() };
 }
 

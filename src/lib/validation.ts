@@ -22,6 +22,15 @@ const optionalUrl = z
   .optional()
   .transform((v) => v ?? null);
 
+/** Require at least one of two language fields to be filled in. */
+const eitherLanguage =
+  (svKey: string, enKey: string) =>
+  (d: Record<string, unknown>, ctx: z.RefinementCtx): void => {
+    const sv = typeof d[svKey] === "string" ? (d[svKey] as string).trim() : "";
+    const en = typeof d[enKey] === "string" ? (d[enKey] as string).trim() : "";
+    if (!sv && !en) ctx.addIssue({ code: "custom", path: [enKey], message: "language" });
+  };
+
 /** HTML checkbox: present as "on" when ticked, absent otherwise. */
 const checkbox = z
   .string()
@@ -78,8 +87,9 @@ export const swishNumberField = z
     return res.value;
   });
 
-export const registrySchema = z.object({
-  titleSv: z.string().trim().min(1).max(120),
+export const registrySchema = z
+  .object({
+  titleSv: z.string().trim().max(120).default(""),
   titleEn: z.string().trim().max(120).default(""),
   welcomeSv: z.string().trim().max(3000).default(""),
   welcomeEn: z.string().trim().max(3000).default(""),
@@ -92,13 +102,16 @@ export const registrySchema = z.object({
   mapUrl: optionalUrl,
   hostContact: optionalText(300),
   swishNumber: swishNumberField,
-});
+  })
+  .superRefine(eitherLanguage("titleSv", "titleEn"));
 
-export const categorySchema = z.object({
-  nameSv: z.string().trim().min(1).max(60),
-  nameEn: z.string().trim().max(60).default(""),
-  sortOrder: z.coerce.number().int().min(0).max(100000).default(0),
-});
+export const categorySchema = z
+  .object({
+    nameSv: z.string().trim().max(60).default(""),
+    nameEn: z.string().trim().max(60).default(""),
+    sortOrder: z.coerce.number().int().min(0).max(100000).default(0),
+  })
+  .superRefine(eitherLanguage("nameSv", "nameEn"));
 
 const optionalKronor = z
   .string()
@@ -111,7 +124,7 @@ export const itemSchema = z
   .object({
     type: z.enum(["physical", "group", "fund"]).default("physical"),
     goalAmount: optionalKronor,
-    nameSv: z.string().trim().min(1).max(200),
+    nameSv: z.string().trim().max(200).default(""),
     nameEn: z.string().trim().max(200).default(""),
     descriptionSv: z.string().trim().max(2000).default(""),
     descriptionEn: z.string().trim().max(2000).default(""),
@@ -130,6 +143,7 @@ export const itemSchema = z
     visible: checkbox,
     sortOrder: z.coerce.number().int().min(0).max(1000000).default(0),
   })
+  .superRefine(eitherLanguage("nameSv", "nameEn"))
   .superRefine((d, ctx) => {
     // Group gifts default their goal to the price; funds need an explicit goal.
     const goal = d.goalAmount ?? (d.type === "group" ? d.price : null);

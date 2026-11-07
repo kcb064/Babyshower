@@ -1,10 +1,10 @@
 export const locales = ["sv", "en"] as const;
 export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = "sv";
+export const defaultLocale: Locale = "en";
 export const LOCALE_COOKIE = "NEXT_LOCALE";
 
-/** Bilingual text as stored in the database. Swedish is the required half. */
-export type Bilingual = { sv: string; en?: string | null };
+/** Bilingual text as stored in the database. At least one half is filled; the other falls back to it. */
+export type Bilingual = { sv?: string | null; en?: string | null };
 
 export function isLocale(value: unknown): value is Locale {
   return typeof value === "string" && (locales as readonly string[]).includes(value);
@@ -14,16 +14,27 @@ export function normalizeLocale(value: unknown): Locale {
   return isLocale(value) ? value : defaultLocale;
 }
 
-/** Pick the text for the active locale, falling back to Swedish when the translation is blank. */
+const filled = (v: string | null | undefined) => typeof v === "string" && v.trim() !== "";
+
+/** Pick the text for the active locale, falling back to the other language when it is blank. */
 export function t2(field: Bilingual | null | undefined, locale: Locale): string {
   if (!field) return "";
-  const value = field[locale];
-  if (typeof value === "string" && value.trim() !== "") return value;
-  return field.sv ?? "";
+  if (filled(field[locale])) return field[locale] as string;
+  const other = locale === "en" ? field.sv : field.en;
+  return filled(other) ? (other as string) : "";
 }
 
-/** Build a Bilingual value from form input, trimming and dropping an empty English half. */
-export function bilingual(sv: string, en?: string | null): Bilingual {
+/** True when at least one language is filled in. */
+export function hasText(field: Bilingual | null | undefined): boolean {
+  return !!field && (filled(field.sv) || filled(field.en));
+}
+
+/** Build a Bilingual value from form input, trimming and dropping empty halves. */
+export function bilingual(sv?: string | null, en?: string | null): Bilingual {
+  const out: Bilingual = {};
+  const svTrim = (sv ?? "").trim();
   const enTrim = (en ?? "").trim();
-  return enTrim ? { sv: sv.trim(), en: enTrim } : { sv: sv.trim() };
+  if (svTrim) out.sv = svTrim;
+  if (enTrim) out.en = enTrim;
+  return out;
 }

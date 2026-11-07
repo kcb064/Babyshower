@@ -7,6 +7,8 @@ const GUEST_EMAIL = "anna@example.com";
 
 async function newPage(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  // The UI defaults to English; these flows assert Swedish copy, so pin the locale cookie.
+  await ctx.addCookies([{ name: "NEXT_LOCALE", value: "sv", url: `http://localhost:${process.env.E2E_PORT ?? 3100}` }]);
   return { ctx, page: await ctx.newPage() };
 }
 
@@ -32,12 +34,14 @@ test("health endpoint returns 200", async ({ request }) => {
   expect(await res.json()).toEqual({ status: "ok" });
 });
 
-test("admin requires sign-in and rejects a wrong passcode", async ({ page }) => {
+test("admin requires sign-in and rejects a wrong passcode", async ({ browser }) => {
+  const { ctx, page } = await newPage(browser);
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/admin\/sign-in$/);
   await page.getByLabel("Lösenkod").fill("nope");
   await page.getByRole("button", { name: "Logga in" }).click();
   await expect(page.getByText("Fel lösenkod.")).toBeVisible();
+  await ctx.close();
 });
 
 test("full registry flow: add item, claim, surprise mode, show name, release", async ({ browser }) => {
@@ -58,7 +62,7 @@ test("full registry flow: add item, claim, surprise mode, show name, release", a
   await expect(ep).toHaveURL(/\/admin\/items\/new$/);
   await expect(ep.getByRole("heading", { name: "Ny sak" })).toBeVisible();
   await ep.getByLabel("Namn – Svenska").fill(ITEM_SV);
-  await ep.getByLabel("Namn – Engelska (valfritt)").fill(ITEM_EN);
+  await ep.getByLabel("Namn – Engelska").fill(ITEM_EN);
   await ep.getByLabel("Pris (kr)").fill("1295");
   await ep.getByLabel("Antal som önskas").fill("3");
   await ep.getByLabel("Kategori").selectOption({ label: "Sova" });
@@ -129,14 +133,15 @@ test("full registry flow: add item, claim, surprise mode, show name, release", a
   await Promise.all([editor.ctx.close(), guest.ctx.close(), other.ctx.close()]);
 });
 
-test("language toggle switches header text", async ({ page }) => {
+test("defaults to English and the language toggle switches header text", async ({ page }) => {
+  // Fresh context without a locale cookie: English is the default.
   await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.getByTestId("nav-my-claims")).toHaveText("My claims");
+  await expect(page.getByRole("heading", { name: "The registry" })).toBeVisible();
+  await page.getByTestId("lang-sv").click();
   await expect(page.getByTestId("nav-my-claims")).toHaveText("Mina reservationer");
   await expect(page.locator("html")).toHaveAttribute("lang", "sv");
   await page.getByTestId("lang-en").click();
   await expect(page.getByTestId("nav-my-claims")).toHaveText("My claims");
-  await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(page.getByRole("heading", { name: "The registry" })).toBeVisible();
-  await page.getByTestId("lang-sv").click();
-  await expect(page.getByTestId("nav-my-claims")).toHaveText("Mina reservationer");
 });
