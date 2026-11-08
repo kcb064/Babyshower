@@ -314,11 +314,12 @@ export function ItemForm({ item, categories, translateEnabled = false }: Props) 
       </div>
 
       <div className="flex flex-wrap gap-x-6 gap-y-2">
-        {type === "physical" && (
+        {isProduct && (
           <label className="flex min-h-11 items-center gap-2">
             <input
               type="checkbox"
               name="usedOk"
+              data-testid="used-ok"
               defaultChecked={item?.usedOk ?? false}
               className="h-5 w-5 accent-[var(--eucalyptus-deep)]"
             />

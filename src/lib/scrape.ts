@@ -1,4 +1,5 @@
 /** Parse a product page for title, image and price (Open Graph, schema.org JSON-LD, microdata). */
+import { guessTextLang } from "./lang-guess";
 
 export interface ScrapedProduct {
   title: string | null;
@@ -7,7 +8,11 @@ export interface ScrapedProduct {
   price: number | null;
   currency: string | null;
   description: string | null;
-  /** Page language when the page declares it (html lang or og:locale), limited to our two locales. */
+  /**
+   * Language of the product text, limited to our two locales: guessed from the title and description
+   * themselves, falling back to what the page declares (html lang or og:locale). Shop templates often
+   * declare "en" while the content is Swedish, so the text wins when it is clear.
+   */
   lang: "sv" | "en" | null;
 }
 
@@ -178,7 +183,8 @@ export function parseProductHtml(html: string, pageUrl: string): ScrapedProduct 
   description ??= meta.get("og:description") ?? meta.get("description") ?? null;
 
   const htmlTag = /<html\b[^>]*>/i.exec(html);
-  const lang = detectLang(htmlTag ? parseAttributes(htmlTag[0]).lang : null) ?? detectLang(meta.get("og:locale"));
+  const declared = detectLang(htmlTag ? parseAttributes(htmlTag[0]).lang : null) ?? detectLang(meta.get("og:locale"));
+  const lang = guessTextLang([title, description].filter(Boolean).join("\n")) ?? declared;
 
   return { title, imageUrl, price, currency, description, lang };
 }

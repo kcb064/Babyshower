@@ -6,6 +6,7 @@ import { logEdit } from "@/db/queries";
 import { requireEditor } from "@/lib/auth";
 import { RateLimiter } from "@/lib/rate-limit";
 import {
+  looksUntranslated,
   MAX_TEXT_CHARS,
   planTranslation,
   resolveProvider,
@@ -17,7 +18,7 @@ import {
 } from "@/lib/translate";
 
 export type TranslateResult =
-  | { ok: true; filled: Record<string, { en?: string; sv?: string }> }
+  | { ok: true; filled: Record<string, { en?: string; sv?: string }>; untranslated: number }
   | { ok: false; error: TranslateErrorCode };
 
 const pairsSchema = z
@@ -52,10 +53,12 @@ export async function translateFields(formData: FormData): Promise<TranslateResu
   }
 
   const plan = planTranslation(parsed.data);
-  if (plan.length === 0) return { ok: true, filled: {} };
+  if (plan.length === 0) return { ok: true, filled: {}, untranslated: 0 };
   if (!limiter.attempt("translate")) return { ok: false, error: "rate_limited" };
 
   const filled: Record<string, { en?: string; sv?: string }> = {};
+  let untranslated = 0;
+  let count = 0;
   try {
     for (const from of ["en", "sv"] as const) {
       const batch: PlannedTranslation[] = plan.filter((p) => p.from === from);
@@ -68,7 +71,14 @@ export async function translateFields(formData: FormData): Promise<TranslateResu
         { provider },
       );
       batch.forEach((p, i) => {
-        filled[p.key] = { ...filled[p.key], [to]: out[i] };
+        const value = out[i] ?? "";
+        // A source echoed back is not a translation: leave the field blank rather than fill it with the wrong language.
+        if (value.trim() === "" || looksUntranslated(p.source, value, from)) {
+          untranslated++;
+          return;
+        }
+        filled[p.key] = { ...filled[p.key], [to]: value };
+        count++;
       });
     }
   } catch (err) {
@@ -80,6 +90,10 @@ export async function translateFields(formData: FormData): Promise<TranslateResu
     return { ok: false, error: "provider_error" };
   }
 
-  logEdit(getDb(), editor.name, `Auto-translated ${plan.length} field(s) (${provider})`);
-  return { ok: true, filled };
+  logEdit(
+    getDb(),
+    editor.name,
+    `Auto-translated ${count} field(s) (${provider})` + (untranslated ? `, ${untranslated} came back untranslated` : ""),
+  );
+  return { ok: true, filled, untranslated };
 }

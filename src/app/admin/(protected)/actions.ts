@@ -165,7 +165,8 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
   if (d.categoryId !== null && !db.select({ id: category.id }).from(category).where(eq(category.id, d.categoryId)).get()) {
     return { error: "invalid", at: Date.now() };
   }
-  // Funds are not products: no image, link, price, quantity or "used ok". Group gifts are one item.
+  // Funds are not products: no image, link, price, quantity or "used ok". Group gifts are one item,
+  // but can still be bought second-hand.
   const values = {
     type: d.type,
     name: bilingual(d.nameSv, d.nameEn),
@@ -177,7 +178,7 @@ export async function saveItem(_prev: FormState, formData: FormData): Promise<Fo
     qtyWanted: d.type === "physical" ? d.qtyWanted : 1,
     priority: d.priority,
     categoryId: d.categoryId,
-    usedOk: d.type === "physical" ? d.usedOk : false,
+    usedOk: isFund ? false : d.usedOk,
     goalAmount: d.type === "physical" ? null : (d.goalAmount ?? d.price),
     visible: d.visible,
     updatedAt: new Date(),

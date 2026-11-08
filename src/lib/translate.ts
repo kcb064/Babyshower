@@ -1,6 +1,7 @@
 // Server-side translation between Swedish and English for the admin "Auto-translate" button.
 // Never import this from a client component: it reads API keys from the environment.
 import Anthropic from "@anthropic-ai/sdk";
+import { guessTextLang } from "./lang-guess";
 
 export type Provider = "anthropic" | "mymemory" | "none";
 export type Lang = "sv" | "en";
@@ -67,6 +68,21 @@ export function planTranslation(pairs: { key: string; en: string; sv: string }[]
     out.push(en ? { key: p.key, from: "en", to: "sv", source: p.en.trim() } : { key: p.key, from: "sv", to: "en", source: p.sv.trim() });
   }
   return out;
+}
+
+const normalize = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const wordCount = (s: string) => normalize(s).split(" ").filter(Boolean).length;
+
+/**
+ * True when a provider handed the source back unchanged, so filling the blank field would put
+ * Swedish text in the English column (or the reverse). MyMemory does this when it has no match
+ * and its machine translation is unavailable. A short echo with no clear language, such as a
+ * brand or model name, is a real "translation" and passes.
+ */
+export function looksUntranslated(source: string, result: string, from: Lang): boolean {
+  if (normalize(source) !== normalize(result)) return false;
+  if (guessTextLang(source) === from) return true;
+  return wordCount(source) > 4;
 }
 
 export interface TranslateOptions {

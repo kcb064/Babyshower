@@ -87,6 +87,12 @@ docker compose start babyshower
 The item form, the baby shower details and the category list have an **Auto-translate empty fields**
 button. It fills the blank language from the one you wrote (Swedish ⇄ English) and never overwrites text:
 fields where both languages are filled, or neither, are skipped. Check the result, then save as usual.
+A result that comes back in the source language (MyMemory sometimes echoes the text when it has no
+translation) is left blank and reported, so Swedish never lands in the English column by mistake.
+
+**Fetch from link** in the item form puts the store's title and description in the column matching
+their language. The text itself is checked first (Swedish shops often declare `lang="en"`); the page's
+declared language is the fallback, and English when neither is clear.
 
 Two providers, picked automatically:
 

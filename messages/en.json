@@ -325,7 +325,8 @@
       "errorTooLong": "The text is too long to translate automatically. Shorten it or translate by hand.",
       "errorRateLimited": "Too many translations right now. Wait a few minutes and try again.",
       "errorNoProvider": "Auto-translate is turned off on this server.",
-      "done": "{count, plural, one {Filled # field.} other {Filled # fields.}} Check the text, then save."
+      "done": "{count, plural, one {Filled # field.} other {Filled # fields.}} Check the text, then save.",
+      "untranslated": "{count, plural, one {# field came back untranslated} other {# fields came back untranslated}} and was left blank. Try again later or translate by hand."
     }
   },
   "errors": {

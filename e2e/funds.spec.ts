@@ -164,6 +164,7 @@ test("group gift: buy the whole thing covers the goal", async ({ browser }) => {
   await ep.getByTestId("type-group").check();
   await ep.getByLabel("Namn – Svenska").fill(GROUP);
   await ep.getByLabel("Pris (kr)").fill("6000");
+  await ep.getByTestId("used-ok").check(); // group gifts can be second-hand too
   await ep.getByTestId("save-item").click();
   await expect(ep).toHaveURL(/\/admin(#items)?$/);
   const adminGroup = ep.getByTestId("admin-item").filter({ hasText: GROUP });
@@ -173,6 +174,7 @@ test("group gift: buy the whole thing covers the goal", async ({ browser }) => {
   const gp = guest.page;
   await gp.goto("/");
   await expect(card(gp, GROUP).getByTestId("fund-progress-text")).toHaveText(amountRe("0", "6 000"));
+  await expect(card(gp, GROUP).getByTestId("used-ok-badge")).toHaveText("Tar gärna begagnat");
   await card(gp, GROUP).getByTestId("contribute-link").click();
   const buy = gp.getByTestId("buy-whole");
   await buy.getByTestId("buy-whole-toggle").click();

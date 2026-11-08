@@ -25,8 +25,9 @@ interface Props {
 
 type Status =
   | { kind: "idle" }
-  | { kind: "done"; count: number }
+  | { kind: "done"; count: number; untranslated: number }
   | { kind: "nothing" }
+  | { kind: "untranslated"; count: number }
   | { kind: "error"; code: Exclude<TranslateResult, { ok: true }>["error"] };
 
 type Field = HTMLInputElement | HTMLTextAreaElement;
@@ -104,7 +105,8 @@ export function TranslateButton({ pairs, onFilled, className, testId = "translat
           count++;
         }
       }
-      setStatus(count ? { kind: "done", count } : { kind: "nothing" });
+      if (count) setStatus({ kind: "done", count, untranslated: res.untranslated });
+      else setStatus(res.untranslated ? { kind: "untranslated", count: res.untranslated } : { kind: "nothing" });
     });
   }
 
@@ -136,6 +138,10 @@ export function TranslateButton({ pairs, onFilled, className, testId = "translat
       </p>
       <p aria-live="polite" className="w-full text-sm" data-testid={`${testId}-status`}>
         {status.kind === "done" && <span className="text-eucalyptus-deep">{t("done", { count: status.count })}</span>}
+        {status.kind === "done" && status.untranslated > 0 && (
+          <span className="text-danger"> {t("untranslated", { count: status.untranslated })}</span>
+        )}
+        {status.kind === "untranslated" && <span className="text-danger">{t("untranslated", { count: status.count })}</span>}
         {status.kind === "nothing" && <span className="text-ink-soft">{t("nothing")}</span>}
         {errorText && <span className="text-danger">{errorText}</span>}
       </p>

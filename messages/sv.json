@@ -325,7 +325,8 @@
       "errorTooLong": "Texten är för lång för automatisk översättning. Korta ner den eller översätt själv.",
       "errorRateLimited": "För många översättningar just nu. Vänta några minuter och försök igen.",
       "errorNoProvider": "Automatisk översättning är avstängd på den här servern.",
-      "done": "{count, plural, one {Fyllde i # fält.} other {Fyllde i # fält.}} Kontrollera texten och spara sedan."
+      "done": "{count, plural, one {Fyllde i # fält.} other {Fyllde i # fält.}} Kontrollera texten och spara sedan.",
+      "untranslated": "{count, plural, one {# fält kom tillbaka oöversatt} other {# fält kom tillbaka oöversatta}} och lämnades tomt. Försök igen senare eller översätt själv."
     }
   },
   "errors": {

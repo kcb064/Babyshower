@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ANTHROPIC_MODEL,
+  looksUntranslated,
   parseTranslationArray,
   planTranslation,
   resolveProvider,
@@ -214,5 +215,21 @@ describe("translateTexts: mymemory", () => {
     const parts = splitForMyMemory("Aa.\nBb. Cc.", 5);
     expect(parts.map((p) => p.body + p.tail).join("")).toBe("Aa.\nBb. Cc.");
     expect(parts.every((p) => p.body.length <= 5)).toBe(true);
+  });
+});
+
+describe("looksUntranslated", () => {
+  it("flags a Swedish description echoed back as English", () => {
+    const sv = "Mjuk och skön babynest i ekologisk bomull. Passar från födseln.";
+    expect(looksUntranslated(sv, sv, "sv")).toBe(true);
+    expect(looksUntranslated(sv, sv.toUpperCase(), "sv")).toBe(true);
+    expect(looksUntranslated(sv, "A soft and cosy baby nest in organic cotton. Fits from birth.", "sv")).toBe(false);
+  });
+
+  it("flags long prose with no clear language, but lets brand names through", () => {
+    expect(looksUntranslated("Stokke Tripp Trapp", "Stokke Tripp Trapp", "sv")).toBe(false);
+    expect(looksUntranslated("BabyBjörn Bouncer Bliss", "BabyBjörn Bouncer Bliss", "en")).toBe(false);
+    expect(looksUntranslated("Alpha beta gamma delta epsilon zeta", "Alpha beta gamma delta epsilon zeta", "sv")).toBe(true);
+    expect(looksUntranslated("Baby nest", "", "en")).toBe(false); // blank results are handled by the caller
   });
 });

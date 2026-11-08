@@ -90,6 +90,18 @@ describe("page language", () => {
   it("falls back to og:locale and is null for other languages", () => {
     expect(parseProductHtml('<html><head><meta property="og:locale" content="sv_SE"></head></html>', "https://e.se").lang).toBe("sv");
     expect(parseProductHtml('<html lang="de"><head></head></html>', "https://e.de").lang).toBe(null);
+  });
+  it("trusts clearly Swedish or English text over the declared language", () => {
+    // Shop templates often declare lang="en" while the product text is Swedish.
+    const sv = `<html lang="en"><head><meta property="og:title" content="Babynest">
+      <meta name="description" content="Mjuk och skön babynest i ekologisk bomull. Passar från födseln."></head></html>`;
+    expect(parseProductHtml(sv, "https://e.se").lang).toBe("sv");
+    const en = `<html><head><meta property="og:title" content="Baby nest">
+      <meta name="description" content="A soft and cosy baby nest made of organic cotton."></head></html>`;
+    expect(parseProductHtml(en, "https://e.com").lang).toBe("en");
+    // A brand name alone says nothing: the declared language stands.
+    const brand = `<html lang="sv"><head><meta property="og:title" content="Stokke Tripp Trapp"></head></html>`;
+    expect(parseProductHtml(brand, "https://e.se").lang).toBe("sv");
     expect(detectLang("EN-GB")).toBe("en");
     expect(detectLang(undefined)).toBe(null);
   });

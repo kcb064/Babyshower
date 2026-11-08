@@ -111,7 +111,7 @@ Takeaways:
 1. **Physical item** — name, image, optional store link, price, quantity, priority, category, notes. Claim decrements quantity. Soft-reserve expires after 72 h unless marked purchased.
 2. **Group gift** — one expensive item with a goal in SEK. Guests contribute via Swish and self-report. Progress bar. Optional "or buy it yourself" path.
 3. **Cash fund** — same mechanics as group gift, with no product (diaper fund, nursery fund, savings fund).
-4. **"Happily take used" flag** on physical items.
+4. **"Happily take used" flag** on physical items and group gifts.
 
 ### 6.4 Pages
 - `/` — public registry: cover, welcome text, event details (date, time, place, map link, host contact), category filter, item grid, funds.

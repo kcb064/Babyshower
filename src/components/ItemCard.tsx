@@ -24,7 +24,11 @@ export async function ItemCard({ item, locale }: { item: PublicItem; locale: Loc
           {item.type === "group" && <span className="badge bg-linen-deep text-ink">{t("typeGroup")}</span>}
           {item.type === "fund" && <span className="badge bg-linen-deep text-ink">{t("typeFund")}</span>}
           {item.priority === "must" && <span className="badge bg-clay-soft text-clay-deep">{t("must")}</span>}
-          {item.usedOk && <span className="badge bg-eucalyptus-soft text-eucalyptus-deep">{t("usedOk")}</span>}
+          {item.usedOk && (
+            <span className="badge bg-eucalyptus-soft text-eucalyptus-deep" data-testid="used-ok-badge">
+              {t("usedOk")}
+            </span>
+          )}
         </div>
         <h3 className="text-2xl">
           <Link href={`/item/${item.id}`} className="no-underline hover:underline decoration-clay underline-offset-4" data-testid="item-name">
