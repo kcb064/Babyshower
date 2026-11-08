@@ -71,14 +71,13 @@ The server writes `${DATA_DIR}/backups/registry-YYYYMMDD-HHMM.db` (UTC) with bet
 - **Säkerhetskopiera nu** under Verktyg on `/admin` (shows the file name and how many are kept), or
 - `pnpm backup` locally / `docker exec babyshower node scripts/backup.mjs` in Docker.
 
-Copy the backups out of the Docker volume and restore one:
+In Docker the backups are ordinary files in `./data/backups` next to `docker-compose.yml`. Copy that
+folder somewhere else now and then. To restore one:
 
 ```sh
-docker cp babyshower:/data/backups ./backups
-# restore: stop the app, put the copy back as /data/registry.db, start again
-# (if /data/registry.db-wal and -shm exist, remove them first, e.g. from a throwaway container on the volume)
 docker compose stop babyshower
-docker cp ./backups/registry-20261206-0300.db babyshower:/data/registry.db
+rm -f data/registry.db-wal data/registry.db-shm
+cp data/backups/registry-20261206-0300.db data/registry.db
 docker compose start babyshower
 ```
 
@@ -155,7 +154,35 @@ Change visibility. A public package needs no login to pull.
 **Building locally instead:** swap `image:`/`pull_policy:` for `build: .` in `docker-compose.yml` and run
 `docker compose up -d --build`.
 
-Data (database, uploads, backups, image cache) lives in the named volume `babyshower-data`. See *Backups* above.
+### Updating without losing data
+
+Everything the app stores (database, uploads, backups, image cache) lives in the `./data` folder next
+to `docker-compose.yml`, mounted into the container at `/data`. The folder is created on first start and
+the container fixes its own file permissions, so nothing needs preparing. Updating the image never
+touches it:
+
+```sh
+docker compose pull && docker compose up -d
+```
+
+`docker compose down`, `down -v`, deleting the container, or running from another folder cannot lose it
+either: it is just files on the host. Only deleting `./data` yourself does. Copy it to back everything up.
+
+If you run the container some other way (Portainer, Synology, Unraid, plain `docker run`), map a host
+folder to `/data` there too. Without a mapping Docker hands out a fresh anonymous volume every time the
+container is recreated, and the registry comes back empty after each update.
+
+**Moving from the earlier named volume.** Versions before this one stored data in a Docker volume named
+`babyshower-data` (shown by `docker volume ls` as `<folder>_babyshower-data`, usually
+`babyshower_babyshower-data`). Copy it into `./data` once, before starting the new image:
+
+```sh
+docker compose stop babyshower
+mkdir -p data
+docker run --rm -v babyshower_babyshower-data:/from -v "$PWD/data":/to alpine sh -c 'cp -a /from/. /to/'
+docker compose up -d
+# when the registry looks right: docker volume rm babyshower_babyshower-data
+```
 
 ### Sign-in loops back to the passcode page?
 

@@ -13,7 +13,11 @@ services:
       DATA_DIR: /data
       DATABASE_PATH: /data/registry.db
     volumes:
-      - babyshower-data:/data
+      # Everything the app stores (database, uploads, backups, image cache) lives in ./data next to
+      # this file, so `docker compose pull && docker compose up -d` (or `down`, even `down -v`) never
+      # touches it. Back it up by copying the folder. Permissions are fixed by the container itself.
+      # Moving from the earlier named volume? See "Updating without losing data" in the README.
+      - ./data:/data
     # Nothing is published to the host by default; the Cloudflare Tunnel reaches the container.
     # Uncomment to reach it directly on the host (e.g. if cloudflared runs on the host, not in Docker):
     # ports:
@@ -27,9 +31,6 @@ services:
     #    http://<host-ip>:3000  (or http://localhost:3000)
     # networks:
     #   - cloudflared
-
-volumes:
-  babyshower-data:
 
 # If your cloudflared container lives on an existing external network, declare it here
 # and uncomment `networks` on the service above:
