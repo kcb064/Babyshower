@@ -24,7 +24,8 @@ const child = spawn(process.execPath, [path.join(standalone, "server.js")], {
     ...process.env,
     NODE_ENV: "production",
     PORT: port,
-    HOSTNAME: "127.0.0.1",
+    // Bind like the Docker image does, so redirects built from the bind address would show up here.
+    HOSTNAME: "0.0.0.0",
     DATA_DIR: dataDir,
     DATABASE_PATH: path.join(dataDir, "registry.db"),
     EDITOR_PASSCODE: "test",
