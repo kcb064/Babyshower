@@ -8,7 +8,6 @@ import type { DB } from "./index";
 import { claim, item, registry, thankYou, type ItemType } from "./schema";
 import { getRegistry, goalFor, logEdit, releaseExpired } from "./queries";
 import { t2, type Bilingual } from "@/lib/i18n";
-import { effectiveStatus } from "@/lib/claims";
 
 /** reserved / purchased as usual; "pending" is a Swish contribution not yet confirmed by the guest. */
 export type GiftStatus = "reserved" | "purchased" | "pending";
@@ -58,9 +57,8 @@ function loadGiftRows(db: DB, now: Date): GiftRow[] {
     .orderBy(asc(item.sortOrder), asc(item.id), asc(claim.createdAt), asc(claim.id))
     .all();
   return rows.flatMap(({ claim: c, item: it, thank }) => {
-    const s = effectiveStatus(c, now);
-    if (s === "released") return [];
-    const status: GiftStatus = c.amount !== null && c.confirmedAt === null ? "pending" : s;
+    if (c.status === "released") return [];
+    const status: GiftStatus = c.amount !== null && c.confirmedAt === null ? "pending" : c.status;
     return [
       {
         claimId: c.id,

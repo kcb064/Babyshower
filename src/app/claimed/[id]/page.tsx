@@ -7,7 +7,7 @@ import { CopyText } from "@/components/CopyText";
 import { EucalyptusBranch } from "@/components/Botanical";
 import { getDb } from "@/db";
 import { getGuestClaim, getRegistry, releaseExpired, type GuestClaim } from "@/db/queries";
-import { formatDateTime, formatSEK } from "@/lib/format";
+import { formatSEK } from "@/lib/format";
 import { baseUrl, getGuest, guestLinkToken } from "@/lib/guest";
 import { normalizeLocale, t2, type Locale } from "@/lib/i18n";
 import { buildSwishPayload, buildSwishQrText, buildSwishUrl, formatSwishNumber, swishMessage } from "@/lib/swish";
@@ -39,9 +39,7 @@ export default async function ClaimedPage({ params }: { params: Promise<{ id: st
             <p className="relative mt-4 text-lg" data-testid="confirm-text">
               {claim.status === "purchased" ? t("purchased", { qty: claim.qty, name }) : t("reserved", { qty: claim.qty, name })}
             </p>
-            {claim.status === "reserved" && claim.expiresAt && (
-              <p className="mt-2 text-ink-soft">{t("expires", { date: formatDateTime(claim.expiresAt, locale) })}</p>
-            )}
+            {claim.status === "reserved" && <p className="mt-2 text-ink-soft">{t("reservedHelp")}</p>}
             {claim.item.storeUrl && (
               <a
                 href={claim.item.storeUrl}

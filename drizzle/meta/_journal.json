@@ -22,6 +22,13 @@
       "when": 1794010083269,
       "tag": "0002_phase3_reveal_links_thanks",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794736095551,
+      "tag": "0003_reservations_keep_reminders",
+      "breakpoints": true
     }
   ]
 }

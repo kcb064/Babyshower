@@ -63,13 +63,13 @@ describe("seed", () => {
 });
 
 describe("createClaim", () => {
-  it("reserves with a 72 h expiry and decrements availability", () => {
+  it("reserves without a deadline and decrements availability", () => {
     const it1 = addItem(2);
     const res = createClaim(db, base(it1.id), now);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.claim.status).toBe("reserved");
-    expect(res.claim.expiresAt?.getTime()).toBe(now.getTime() + 72 * 3600 * 1000);
+    expect(res.claim.expiresAt).toBeNull();
     expect(res.claimedAfter).toBe(1);
     expect(listPublicItems(db, now)[0]?.status.remaining).toBe(1);
   });
@@ -93,15 +93,15 @@ describe("createClaim", () => {
     expect(res.ok && res.claim.expiresAt).toBeNull();
   });
 
-  it("lazily releases expired reservations and writes them back", () => {
+  it("keeps a reservation that is never marked as bought, however long it takes", () => {
     const it1 = addItem(1);
     const first = createClaim(db, base(it1.id), now);
     expect(first.ok).toBe(true);
-    const after = new Date(now.getTime() + 73 * 3600 * 1000);
-    expect(listPublicItems(db, after)[0]?.status.remaining).toBe(1);
-    const row = db.select().from(claim).get();
-    expect(row?.status).toBe("released");
-    expect(createClaim(db, base(it1.id, { guestKey: "g2" }), after).ok).toBe(true);
+    const after = new Date(now.getTime() + 60 * 24 * 3600 * 1000);
+    expect(listPublicItems(db, after)[0]?.status.remaining).toBe(0);
+    expect(db.select().from(claim).get()?.status).toBe("reserved");
+    expect(createClaim(db, base(it1.id, { guestKey: "g2" }), after)).toMatchObject({ ok: false, reason: "unavailable" });
+    expect(listGuestClaims(db, "g1", after)).toHaveLength(1);
   });
 });
 
