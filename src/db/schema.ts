@@ -97,12 +97,16 @@ export const claim = sqliteTable(
     message: text("message"),
     showName: integer("show_name", { mode: "boolean" }).notNull().default(false),
     address: text("address"),
+    /** Only for an unconfirmed Swish contribution (24 h to confirm). Reservations have no deadline. */
     expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }),
     releasedAt: integer("released_at", { mode: "timestamp_ms" }),
     /** When the guest pressed "I've sent it" for a Swish contribution. Only confirmed ones count. */
     confirmedAt: integer("confirmed_at", { mode: "timestamp_ms" }),
+    /** Email reminders about a reservation not yet marked as bought (src/lib/reminders.ts). */
+    remindedAt: integer("reminded_at", { mode: "timestamp_ms" }),
+    reminderCount: integer("reminder_count").notNull().default(0),
   },
   (t) => [index("claim_item_idx").on(t.itemId), index("claim_guest_idx").on(t.guestKey)],
 );

@@ -12,9 +12,19 @@ import { listBackups, backupsDir } from "@/lib/backup";
 import { linkBadge } from "@/lib/linkcheck";
 import { resolveProvider } from "@/lib/translate";
 import { TranslateButton } from "@/components/TranslateButton";
-import { BackupButton, LinkCheckButton } from "./AdminTools";
+import { mailEnabled } from "@/lib/mail";
+import { BackupButton, LinkCheckButton, ReminderButton } from "./AdminTools";
 import { ScrollToItems } from "./ScrollToItems";
-import { addCategory, deleteCategory, deleteItem, moveCategory, moveItem, toggleItemVisible, updateCategory } from "./actions";
+import {
+  addCategory,
+  deleteCategory,
+  deleteItem,
+  moveCategory,
+  moveItem,
+  releaseReservations,
+  toggleItemVisible,
+  updateCategory,
+} from "./actions";
 import { RegistryForm } from "./RegistryForm";
 
 export default async function AdminPage() {
@@ -195,6 +205,18 @@ export default async function AdminPage() {
                   <Link href={`/admin/items/${it.id}`} className="btn btn-secondary btn-small">
                     {t("items.edit")}
                   </Link>
+                  {it.aggregate.qtyClaimed > it.aggregate.qtyPurchased && (
+                    <form action={releaseReservations}>
+                      <input type="hidden" name="id" value={it.id} />
+                      <ConfirmSubmit
+                        message={t("items.releaseConfirm")}
+                        className="btn btn-secondary btn-small"
+                        data-testid="release-reservations"
+                      >
+                        {t("items.release")}
+                      </ConfirmSubmit>
+                    </form>
+                  )}
                   <form action={deleteItem}>
                     <input type="hidden" name="id" value={it.id} />
                     <ConfirmSubmit message={t("items.deleteConfirm")} className="btn btn-ghost btn-small text-danger">
@@ -236,6 +258,7 @@ export default async function AdminPage() {
               {backups[0] ? t("tools.backupLatest", { name: backups[0], count: backups.length }) : t("tools.backupNone")}
             </p>
           </div>
+          <ReminderButton enabled={mailEnabled()} />
         </div>
       </section>
 

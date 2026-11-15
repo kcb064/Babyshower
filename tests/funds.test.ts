@@ -24,7 +24,6 @@ describe("fundTotals (pure)", () => {
   const c = (over: Partial<ContributionLike>): ContributionLike => ({
     qty: 1,
     status: "purchased",
-    expiresAt: null,
     amount: 300,
     confirmedAt: now,
     createdAt: now,
@@ -34,7 +33,7 @@ describe("fundTotals (pure)", () => {
   it("counts only confirmed contributions", () => {
     const t = fundTotals(
       5000,
-      [c({ amount: 300 }), c({ amount: 2800 }), c({ amount: 500, confirmedAt: null, expiresAt: hours(24) })],
+      [c({ amount: 300 }), c({ amount: 2800 }), c({ amount: 500, confirmedAt: null })],
       hours(1),
     );
     expect(t).toMatchObject({
@@ -63,10 +62,12 @@ describe("fundTotals (pure)", () => {
   });
 
   it("treats a whole-gift claim as fully covered", () => {
-    const whole = c({ amount: null, confirmedAt: null, status: "reserved", expiresAt: hours(72) });
+    const whole = c({ amount: null, confirmedAt: null, status: "reserved" });
     const t = fundTotals(4000, [whole], now);
     expect(t).toMatchObject({ boughtWhole: true, covered: true, percent: 100, confirmed: 0 });
-    expect(fundTotals(4000, [whole], hours(73)).boughtWhole).toBe(false);
+    // A whole-gift reservation has no deadline: it still covers the gift weeks later.
+    expect(fundTotals(4000, [whole], hours(24 * 30)).boughtWhole).toBe(true);
+    expect(fundTotals(4000, [c({ amount: null, confirmedAt: null, status: "released" })], now).boughtWhole).toBe(false);
   });
 
   it("only names confirmed contributors who opted in", () => {

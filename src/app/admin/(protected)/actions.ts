@@ -5,13 +5,17 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb, type DB } from "@/db";
 import { logEdit } from "@/db/queries";
+import { notifyReleased, releaseItemReservations } from "@/db/reminders";
 import { category, claim, item, registry, type ItemType } from "@/db/schema";
 import { requireEditor } from "@/lib/auth";
 import { serverEnv } from "@/lib/env";
+import { baseUrl } from "@/lib/guest";
 import { bilingual, t2 } from "@/lib/i18n";
 import { fetchHtml, isFetchableUrl, parseProductHtml, type ScrapedProduct } from "@/lib/scrape";
 import { backupNow } from "@/lib/backup";
 import { checkLinks, LINKCHECK_COOLDOWN_MS } from "@/lib/linkcheck";
+import { mailer } from "@/lib/mail";
+import { runReminders } from "@/lib/reminder-schedule";
 import { RateLimiter } from "@/lib/rate-limit";
 import { saveImageUpload } from "@/lib/uploads";
 import { categorySchema, formToObject, itemSchema, registrySchema } from "@/lib/validation";
@@ -232,6 +236,24 @@ export async function deleteItem(formData: FormData) {
   refresh();
 }
 
+/**
+ * Free an item whose reservation is stuck: releases every reservation on it that is not marked as
+ * bought. The editor never learns whose it was; the guest is told by email when email is set up.
+ */
+export async function releaseReservations(formData: FormData) {
+  const editor = await requireEditor();
+  const id = idFrom(formData);
+  if (!id) return;
+  const db = getDb();
+  const released = releaseItemReservations(db, id);
+  if (!released.length) return;
+  const qty = released.reduce((sum, r) => sum + r.qty, 0);
+  logEdit(db, editor.name, `Released ${qty} reserved (not bought) of "${itemName(db, id)}"`);
+  const send = mailer();
+  if (send) await notifyReleased(db, send, released, await baseUrl());
+  refresh();
+}
+
 export async function toggleItemVisible(formData: FormData) {
   const editor = await requireEditor();
   const id = idFrom(formData);
@@ -373,4 +395,23 @@ export async function backupNowAction(): Promise<BackupState> {
     console.error("[backup] failed:", err instanceof Error ? err.message : err);
     return { status: "failed", at: Date.now() };
   }
+}
+
+/* ---------- Email reminders ---------- */
+
+export type ReminderState =
+  | { status: "idle" }
+  | { status: "done"; sent: number; failed: number; at: number }
+  | { status: "off"; at: number };
+
+/** Send the reminders that are due right now. Only counts come back, so surprise mode holds. */
+export async function sendRemindersAction(): Promise<ReminderState> {
+  const editor = await requireEditor();
+  const run = await runReminders(await baseUrl());
+  if (!run) return { status: "off", at: Date.now() };
+  if (run.sent || run.failed) {
+    logEdit(getDb(), editor.name, `Sent ${run.sent} reminder email(s)${run.failed ? `, ${run.failed} failed` : ""}`);
+    revalidatePath("/admin");
+  }
+  return { status: "done", sent: run.sent, failed: run.failed, at: Date.now() };
 }

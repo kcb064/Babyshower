@@ -9,7 +9,10 @@ Stack: Next.js 15 (App Router) · Tailwind CSS v4 · SQLite via Drizzle + better
 
 ## Item types, Swish and the starter list
 
-- **Sak / Item** (`physical`): guests reserve a quantity (held 72 h) and mark it bought.
+- **Sak / Item** (`physical`): guests reserve a quantity and mark it bought. A reservation has no
+  deadline: it stays until the guest marks it bought or releases it. Editors can free a stuck one with
+  **Release reservation** on the item in `/admin` (they never see whose it was; the guest gets an email
+  when email is set up).
 - **Gruppresent / Group gift** (`group`): a product with a goal (defaults to the price). Guests chip in
   via Swish, or one guest can take "Jag köper hela" (buy it whole) while nobody has contributed yet;
   that uses the normal reserve flow for qty 1 and shows the goal as fully covered.
@@ -25,6 +28,15 @@ counts toward the progress bar after the guest taps **"Jag har swishat"** (also 
 verification: it is self-reported, by design. Editors see the total, number of contributions and
 pending count, never names before reveal. ntfy sends `New contribution: Nappy fund 300 kr (3 100 / 5 000)`
 when a contribution is confirmed.
+
+**Email reminders.** With the `SMTP_*` settings below filled in, guests who reserved something and have
+not marked it as bought get a reminder by email: the first after 3 days, then weekly, at most 3 in total.
+The mail is in English and Swedish, lists everything that guest still has reserved and links to their
+"my claims" page, where one click marks it bought or releases it. The server checks once an hour and
+only sends between 09:00 and 20:00 Swedish time; **Send reminders now** under *Tools* in `/admin` sends
+whatever is due right away and reports only how many went out. Unconfirmed Swish contributions are not
+reminded. Sent mail lands in the sending account's *Sent* folder with the guest's address and the item
+names, so use a mailbox the parents-to-be do not read if the surprise matters.
 
 **Starter list.** About 60 Swedish-market suggestions (`src/db/starter.ts`) are inserted hidden on the
 first start. Pick what to show at `/admin/starter` (per item or per category). Seeding runs once:
@@ -117,7 +129,11 @@ Copy `.env.example` to `.env` and fill it in.
 | `EDITOR_PASSCODE` | yes (prod) | Shared passcode for `/admin/sign-in` |
 | `COOKIE_SECRET` | yes (prod) | HMAC key for cookies, e.g. `openssl rand -hex 32` |
 | `NTFY_TOPIC` | no | Secret ntfy.sh topic for push notices on claim / purchase / release, in English (e.g. `New reservation: Baby nest (1 of 2)`; guest names only after reveal). Empty disables. |
-| `PUBLIC_URL` | no | Public tunnel URL, used for the durable "my claims" link. Falls back to request host. |
+| `PUBLIC_URL` | no | Public tunnel URL, used for the durable "my claims" link. Falls back to request host. Required for scheduled reminder emails. |
+| `SMTP_HOST` | no | Mail server for guest emails (reminders, release notices), e.g. `smtp.gmail.com`. Empty disables email. |
+| `SMTP_PORT` | no | Default `587` (STARTTLS). `465` uses TLS from the start. |
+| `SMTP_USER` / `SMTP_PASS` | no | Login for the mail server. For Gmail: your address and an [app password](https://myaccount.google.com/apppasswords), not your normal password. |
+| `MAIL_FROM` | no | Sender, e.g. `Baby shower <you@gmail.com>`. Defaults to `SMTP_USER`. |
 | `DATABASE_PATH` | no | SQLite file (default `./data/registry.db`, `/data/registry.db` in Docker) |
 | `DATA_DIR` | no | `uploads/`, `backups/` and `imgcache/` live here (default `./data`, `/data` in Docker) |
 | `ANTHROPIC_API_KEY` | no | Enables Claude for Auto-translate. Without it the free MyMemory API is used. |

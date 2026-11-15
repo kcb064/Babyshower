@@ -129,6 +129,25 @@ test("full registry flow: add item, claim, surprise mode, show name, release", a
   await expect(card(gp).getByTestId("item-status-text")).toHaveText("3 av 3 kvar");
   await ep.goto("/admin");
   await expect(adminItem.getByTestId("agg-claimed")).toHaveText("0");
+  await expect(adminItem.getByTestId("release-reservations")).toHaveCount(0);
+
+  // --- A reservation has no deadline; the editor can free a stuck one without seeing whose it is ---
+  await claim(gp, { showName: false });
+  await expect(gp.getByTestId("claim-confirmation")).not.toContainText("gäller till");
+  await ep.goto("/admin");
+  await expect(adminItem.getByTestId("agg-claimed")).toHaveText("1");
+  ep.once("dialog", (d) => void d.accept());
+  await adminItem.getByTestId("release-reservations").click();
+  await expect(adminItem.getByTestId("agg-claimed")).toHaveText("0");
+  await expect(adminItem.getByTestId("release-reservations")).toHaveCount(0);
+  await expect(ep.getByTestId("editor-log")).toContainText(`Released 1 reserved (not bought) of "${ITEM_EN}"`);
+  await expect(ep.locator("body")).not.toContainText("Anna");
+  await gp.goto("/my-claims");
+  await expect(gp.getByText("Du har inga reservationer här ännu.")).toBeVisible();
+
+  // --- Without SMTP settings the reminder button is off and says why ---
+  await expect(ep.getByTestId("send-reminders")).toBeDisabled();
+  await expect(ep.getByTestId("send-reminders-result")).toContainText("E-post är inte inställd");
 
   await Promise.all([editor.ctx.close(), guest.ctx.close(), other.ctx.close()]);
 });

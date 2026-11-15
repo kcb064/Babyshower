@@ -12,7 +12,6 @@ import {
   MAX_CONTRIBUTION,
   MIN_CONTRIBUTION,
   publicStatus,
-  reservationExpiry,
   type AdminItemAggregate,
   type ContributionLike,
   type FundTotals,
@@ -20,21 +19,15 @@ import {
 } from "@/lib/claims";
 
 /**
- * Lazy release: reserved claims past their 72 h hold, and Swish contributions never confirmed
- * within 24 h, are written back as released.
+ * Lazy release: Swish contributions never confirmed within 24 h are written back as released.
+ * Reservations never lapse on their own; the guest (or an editor) releases them.
  */
 export function releaseExpired(db: DB, now: Date = new Date()): number {
-  const reserves = db
-    .update(claim)
-    .set({ status: "released", releasedAt: now, updatedAt: now })
-    .where(and(eq(claim.status, "reserved"), lte(claim.expiresAt, now)))
-    .run();
-  const contributions = db
+  return db
     .update(claim)
     .set({ status: "released", releasedAt: now, updatedAt: now })
     .where(and(eq(claim.status, "purchased"), isNotNull(claim.amount), isNull(claim.confirmedAt), lte(claim.expiresAt, now)))
-    .run();
-  return reserves.changes + contributions.changes;
+    .run().changes;
 }
 
 /** Goal in SEK for a group gift or fund: explicit goal, else the price (group gifts). */
@@ -45,9 +38,9 @@ export function goalFor(it: Pick<Item, "goalAmount" | "price">): number {
 type ClaimForStatus = ContributionLike & { showName?: boolean; guestName?: string };
 
 /** Physical-style status for an item: group gifts count only "buy the whole gift" claims, qty 1. */
-function itemAvailability(it: Item, claims: readonly ClaimForStatus[], now: Date) {
-  if (it.type === "physical") return publicStatus(it.qtyWanted, claims, now);
-  return publicStatus(1, it.type === "group" ? claims.filter((c) => c.amount === null) : [], now);
+function itemAvailability(it: Item, claims: readonly ClaimForStatus[]) {
+  if (it.type === "physical") return publicStatus(it.qtyWanted, claims);
+  return publicStatus(1, it.type === "group" ? claims.filter((c) => c.amount === null) : []);
 }
 
 function itemFund(it: Item, claims: readonly ClaimForStatus[], now: Date): FundTotals | null {
@@ -66,7 +59,7 @@ export function listCategories(db: DB) {
 
 type PublicClaimRow = Pick<
   Claim,
-  "itemId" | "qty" | "status" | "expiresAt" | "showName" | "guestName" | "amount" | "confirmedAt" | "createdAt"
+  "itemId" | "qty" | "status" | "showName" | "guestName" | "amount" | "confirmedAt" | "createdAt"
 >;
 
 function publicClaimsFor(db: DB, itemIds: number[]): Map<number, PublicClaimRow[]> {
@@ -77,7 +70,6 @@ function publicClaimsFor(db: DB, itemIds: number[]): Map<number, PublicClaimRow[
       itemId: claim.itemId,
       qty: claim.qty,
       status: claim.status,
-      expiresAt: claim.expiresAt,
       showName: claim.showName,
       guestName: claim.guestName,
       amount: claim.amount,
@@ -101,7 +93,7 @@ function withPublicStatus(db: DB, items: Item[], now: Date): PublicItem[] {
   const claims = publicClaimsFor(db, items.map((i) => i.id));
   return items.map((i) => {
     const list = claims.get(i.id) ?? [];
-    return { ...i, status: itemAvailability(i, list, now), fund: itemFund(i, list, now) };
+    return { ...i, status: itemAvailability(i, list), fund: itemFund(i, list, now) };
   });
 }
 
@@ -110,7 +102,6 @@ function claimsForItem(db: DB, itemId: number): ClaimForStatus[] {
     .select({
       qty: claim.qty,
       status: claim.status,
-      expiresAt: claim.expiresAt,
       amount: claim.amount,
       confirmedAt: claim.confirmedAt,
       createdAt: claim.createdAt,
@@ -180,8 +171,8 @@ export function createClaim(db: DB, input: NewClaimInput, now: Date = new Date()
     }
     const avail =
       it.type === "group"
-        ? availability(1, existing.filter((c) => c.amount === null), now)
-        : availability(it.qtyWanted, existing, now);
+        ? availability(1, existing.filter((c) => c.amount === null))
+        : availability(it.qtyWanted, existing);
     const check = checkClaimQty(input.qty, avail.remaining);
     if (!check.ok) return { ok: false as const, reason: check.reason, remaining: avail.remaining };
     const created = tx
@@ -196,7 +187,6 @@ export function createClaim(db: DB, input: NewClaimInput, now: Date = new Date()
         message: input.message,
         showName: input.showName,
         address: input.address,
-        expiresAt: input.purchased ? null : reservationExpiry(now),
         createdAt: now,
         updatedAt: now,
       })
@@ -296,8 +286,8 @@ export function getGuestClaim(db: DB, claimId: number, guestKey: string): GuestC
   return r ? { ...r.claim, item: r.item } : null;
 }
 
-function claimedCount(db: DB, it: Item, now: Date): number {
-  return itemAvailability(it, claimsForItem(db, it.id), now).claimed;
+function claimedCount(db: DB, it: Item): number {
+  return itemAvailability(it, claimsForItem(db, it.id)).claimed;
 }
 
 export type GuestChangeResult = { ok: true; claim: GuestClaim; claimedAfter: number } | { ok: false };
@@ -308,7 +298,7 @@ export function markClaimPurchased(db: DB, claimId: number, guestKey: string, no
   const c = getGuestClaim(db, claimId, guestKey);
   if (!c || c.status !== "reserved") return { ok: false };
   db.update(claim).set({ status: "purchased", expiresAt: null, updatedAt: now }).where(eq(claim.id, c.id)).run();
-  return { ok: true, claim: { ...c, status: "purchased" }, claimedAfter: claimedCount(db, c.item, now) };
+  return { ok: true, claim: { ...c, status: "purchased" }, claimedAfter: claimedCount(db, c.item) };
 }
 
 /** Guest releases (un-claims) their own claim. */
@@ -317,7 +307,7 @@ export function releaseGuestClaim(db: DB, claimId: number, guestKey: string, now
   // Swish contributions cannot be released: the money has (or has not) been sent outside the app.
   if (!c || c.status === "released" || c.amount !== null) return { ok: false };
   db.update(claim).set({ status: "released", releasedAt: now, updatedAt: now }).where(eq(claim.id, c.id)).run();
-  return { ok: true, claim: { ...c, status: "released" }, claimedAfter: claimedCount(db, c.item, now) };
+  return { ok: true, claim: { ...c, status: "released" }, claimedAfter: claimedCount(db, c.item) };
 }
 
 export type AdminItem = Item & { aggregate: AdminItemAggregate; fund: FundTotals | null };
@@ -338,7 +328,6 @@ export function listAdminItems(db: DB, revealed: boolean, now: Date = new Date()
             itemId: claim.itemId,
             qty: claim.qty,
             status: claim.status,
-            expiresAt: claim.expiresAt,
             guestName: claim.guestName,
             guestEmail: claim.guestEmail,
             message: claim.message,
@@ -355,7 +344,6 @@ export function listAdminItems(db: DB, revealed: boolean, now: Date = new Date()
             itemId: claim.itemId,
             qty: claim.qty,
             status: claim.status,
-            expiresAt: claim.expiresAt,
             amount: claim.amount,
             confirmedAt: claim.confirmedAt,
             createdAt: claim.createdAt,
@@ -375,7 +363,7 @@ export function listAdminItems(db: DB, revealed: boolean, now: Date = new Date()
     const physical = i.type === "physical" ? list : i.type === "group" ? list.filter((c) => c.amount === null) : [];
     return {
       ...i,
-      aggregate: adminAggregate(i.type === "physical" ? i.qtyWanted : 1, physical, revealed, now),
+      aggregate: adminAggregate(i.type === "physical" ? i.qtyWanted : 1, physical, revealed),
       // In surprise mode guestName is blank above, so fund totals cannot carry names either.
       fund: itemFund(i, revealed ? list : list.map((c) => ({ ...c, showName: false })), now),
     };

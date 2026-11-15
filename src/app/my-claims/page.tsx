@@ -103,11 +103,6 @@ export default async function MyClaimsPage({ searchParams }: { searchParams: Pro
                     >
                       {t(c.status === "purchased" ? "status_purchased" : "status_reserved")}
                     </span>
-                    {c.status === "reserved" && c.expiresAt && (
-                      <span className="mt-1 block text-ink-soft sm:ml-2 sm:mt-0 sm:inline">
-                        {t("expires", { date: formatDateTime(c.expiresAt, locale) })}
-                      </span>
-                    )}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {c.status === "reserved" && (

@@ -1,29 +1,16 @@
-/** Pure claim rules: availability, expiry and what each audience is allowed to see. */
-
-export const RESERVE_HOURS = 72;
-export const RESERVE_MS = RESERVE_HOURS * 60 * 60 * 1000;
+/** Pure claim rules: availability and what each audience is allowed to see. */
 
 export type ClaimStatus = "reserved" | "purchased" | "released";
 
+/**
+ * A reservation has no deadline: it stays until the guest marks it bought or releases it (or an
+ * editor frees it). Only unconfirmed Swish contributions lapse on their own, see below.
+ */
 export interface ClaimLike {
   qty: number;
   status: ClaimStatus;
-  expiresAt: Date | null;
   showName?: boolean;
   guestName?: string;
-}
-
-/** A reserved claim whose 72 h hold has run out counts as released. */
-export function isExpired(claim: Pick<ClaimLike, "status" | "expiresAt">, now: Date): boolean {
-  return claim.status === "reserved" && claim.expiresAt !== null && claim.expiresAt.getTime() <= now.getTime();
-}
-
-export function effectiveStatus(claim: Pick<ClaimLike, "status" | "expiresAt">, now: Date): ClaimStatus {
-  return isExpired(claim, now) ? "released" : claim.status;
-}
-
-export function reservationExpiry(now: Date): Date {
-  return new Date(now.getTime() + RESERVE_MS);
 }
 
 export interface Availability {
@@ -35,13 +22,12 @@ export interface Availability {
   remaining: number;
 }
 
-export function availability(qtyWanted: number, claims: readonly ClaimLike[], now: Date): Availability {
+export function availability(qtyWanted: number, claims: readonly ClaimLike[]): Availability {
   let reserved = 0;
   let purchased = 0;
   for (const c of claims) {
-    const s = effectiveStatus(c, now);
-    if (s === "reserved") reserved += c.qty;
-    else if (s === "purchased") purchased += c.qty;
+    if (c.status === "reserved") reserved += c.qty;
+    else if (c.status === "purchased") purchased += c.qty;
   }
   const claimed = reserved + purchased;
   return { total: qtyWanted, reserved, purchased, claimed, remaining: Math.max(0, qtyWanted - claimed) };
@@ -59,15 +45,14 @@ export interface PublicItemStatus extends Availability {
   names: string[];
 }
 
-export function publicStatus(qtyWanted: number, claims: readonly ClaimLike[], now: Date): PublicItemStatus {
+export function publicStatus(qtyWanted: number, claims: readonly ClaimLike[]): PublicItemStatus {
   const names: string[] = [];
   for (const c of claims) {
-    const s = effectiveStatus(c, now);
-    if (s === "released") continue;
+    if (c.status === "released") continue;
     const name = c.showName ? c.guestName?.trim().split(/\s+/)[0] : undefined;
     if (name && !names.includes(name)) names.push(name);
   }
-  return { ...availability(qtyWanted, claims, now), names };
+  return { ...availability(qtyWanted, claims), names };
 }
 
 export interface AdminClaimDetail {
@@ -103,20 +88,19 @@ export function adminAggregate(
   qtyWanted: number,
   claims: readonly AdminClaimInput[],
   revealed: boolean,
-  now: Date,
 ): AdminItemAggregate {
-  const a = availability(qtyWanted, claims, now);
+  const a = availability(qtyWanted, claims);
   const base = { total: a.total, qtyClaimed: a.claimed, qtyPurchased: a.purchased, remaining: a.remaining };
   if (!revealed) return { ...base, details: null };
   return {
     ...base,
     details: claims
-      .filter((c) => effectiveStatus(c, now) !== "released")
+      .filter((c) => c.status !== "released")
       .map((c) => ({
         guestName: c.guestName,
         guestEmail: c.guestEmail,
         qty: c.qty,
-        status: effectiveStatus(c, now),
+        status: c.status,
         message: c.message,
         address: c.address,
       })),
@@ -135,7 +119,6 @@ export const CONTRIBUTION_PRESETS = [200, 300, 500, 1000] as const;
 export interface ContributionLike {
   qty: number;
   status: ClaimStatus;
-  expiresAt: Date | null;
   /** Set for fund / group contributions; null for a "buy the whole thing" claim. */
   amount: number | null;
   confirmedAt: Date | null;
@@ -186,7 +169,7 @@ export interface FundTotals {
 
 /**
  * Progress for a group gift or cash fund. Only confirmed contributions count; unconfirmed ones
- * older than 24 h are ignored entirely (lazily released by the query layer, like reservations).
+ * older than 24 h are ignored entirely (and lazily written back as released by the query layer).
  */
 export function fundTotals(goal: number | null, claims: readonly ContributionLike[], now: Date): FundTotals {
   const g = goal && goal > 0 ? goal : 0;
@@ -197,7 +180,7 @@ export function fundTotals(goal: number | null, claims: readonly ContributionLik
   const names: string[] = [];
   for (const c of claims) {
     if (c.amount === null) {
-      if (effectiveStatus(c, now) !== "released") boughtWhole = true;
+      if (c.status !== "released") boughtWhole = true;
       continue;
     }
     if (isConfirmedContribution(c)) {

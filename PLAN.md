@@ -108,7 +108,7 @@ Takeaways:
 - After reveal, editors see the full list with names, emails, messages, optional addresses, and a thank-you checkbox per gift. CSV export.
 
 ### 6.3 Item types
-1. **Physical item** — name, image, optional store link, price, quantity, priority, category, notes. Claim decrements quantity. Soft-reserve expires after 72 h unless marked purchased.
+1. **Physical item** — name, image, optional store link, price, quantity, priority, category, notes. Claim decrements quantity. A reservation has no deadline (the original 72 h soft-reserve was dropped: guests forgot to mark items as bought and silently lost them); guests get email reminders instead, and editors can release a stuck reservation.
 2. **Group gift** — one expensive item with a goal in SEK. Guests contribute via Swish and self-report. Progress bar. Optional "or buy it yourself" path.
 3. **Cash fund** — same mechanics as group gift, with no product (diaper fund, nursery fund, savings fund).
 4. **"Happily take used" flag** on physical items and group gifts.
