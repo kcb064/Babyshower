@@ -110,7 +110,8 @@ test("full registry flow: add item, claim, surprise mode, show name, release", a
 
   // --- The durable link restores "my claims" on another device ---
   await other.page.goto(myClaimsUrl);
-  await expect(other.page).toHaveURL(/\/my-claims$/);
+  // Exactly the public address: the redirect must not point at the server's bind address.
+  await expect(other.page).toHaveURL(`http://localhost:${process.env.E2E_PORT ?? 3100}/my-claims`);
   await expect(other.page.getByTestId("my-claim")).toHaveCount(2);
 
   // --- Guest releases both claims → counts return ---
