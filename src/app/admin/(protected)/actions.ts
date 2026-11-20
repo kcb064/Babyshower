@@ -15,7 +15,7 @@ import { fetchHtml, isFetchableUrl, parseProductHtml, type ScrapedProduct } from
 import { backupNow } from "@/lib/backup";
 import { checkLinks, LINKCHECK_COOLDOWN_MS } from "@/lib/linkcheck";
 import { mailer } from "@/lib/mail";
-import { runReminders } from "@/lib/reminder-schedule";
+import { remindItem, runReminders } from "@/lib/reminder-schedule";
 import { RateLimiter } from "@/lib/rate-limit";
 import { saveImageUpload } from "@/lib/uploads";
 import { categorySchema, formToObject, itemSchema, registrySchema } from "@/lib/validation";
@@ -414,4 +414,27 @@ export async function sendRemindersAction(): Promise<ReminderState> {
     revalidatePath("/admin");
   }
   return { status: "done", sent: run.sent, failed: run.failed, at: Date.now() };
+}
+
+export type ItemReminderState =
+  | { status: "idle" }
+  | { status: "done"; sent: number; failed: number; recent: number; at: number }
+  | { status: "off"; at: number };
+
+/**
+ * Remind the guest(s) holding an unbought reservation on one item, right now. Like the release, the
+ * editor only learns how many mails went out, never to whom.
+ */
+export async function remindItemAction(_prev: ItemReminderState, formData: FormData): Promise<ItemReminderState> {
+  const editor = await requireEditor();
+  const id = idFrom(formData);
+  if (!id) return { status: "idle" };
+  const run = await remindItem(await baseUrl(), id);
+  if (!run) return { status: "off", at: Date.now() };
+  if (run.sent || run.failed) {
+    const db = getDb();
+    logEdit(db, editor.name, `Sent ${run.sent} reminder email(s) about "${itemName(db, id)}"${run.failed ? `, ${run.failed} failed` : ""}`);
+    revalidatePath("/admin");
+  }
+  return { status: "done", sent: run.sent, failed: run.failed, recent: run.recent, at: Date.now() };
 }

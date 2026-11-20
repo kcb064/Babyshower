@@ -137,10 +137,15 @@ test("full registry flow: add item, claim, surprise mode, show name, release", a
   await expect(gp.getByTestId("claim-confirmation")).not.toContainText("gäller till");
   await ep.goto("/admin");
   await expect(adminItem.getByTestId("agg-claimed")).toHaveText("1");
+  // The row says how long it has been waiting; the per-item reminder is off without SMTP settings.
+  await expect(adminItem.getByTestId("admin-open-reservation")).toContainText("ingen påminnelse skickad ännu");
+  await expect(adminItem.getByTestId("remind-item")).toBeDisabled();
   ep.once("dialog", (d) => void d.accept());
   await adminItem.getByTestId("release-reservations").click();
   await expect(adminItem.getByTestId("agg-claimed")).toHaveText("0");
   await expect(adminItem.getByTestId("release-reservations")).toHaveCount(0);
+  await expect(adminItem.getByTestId("remind-item")).toHaveCount(0);
+  await expect(adminItem.getByTestId("admin-open-reservation")).toHaveCount(0);
   await expect(ep.getByTestId("editor-log")).toContainText(`Released 1 reserved (not bought) of "${ITEM_EN}"`);
   await expect(ep.locator("body")).not.toContainText("Anna");
   await gp.goto("/my-claims");

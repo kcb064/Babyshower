@@ -310,7 +310,15 @@ export function releaseGuestClaim(db: DB, claimId: number, guestKey: string, now
   return { ok: true, claim: { ...c, status: "released" }, claimedAfter: claimedCount(db, c.item) };
 }
 
-export type AdminItem = Item & { aggregate: AdminItemAggregate; fund: FundTotals | null };
+/** Reservations on an item that are not marked as bought: timing only, never whose they are. */
+export interface OpenReservations {
+  /** When the oldest of them was made. */
+  since: Date;
+  /** When a reminder email last went out about any of them. */
+  remindedAt: Date | null;
+}
+
+export type AdminItem = Item & { aggregate: AdminItemAggregate; fund: FundTotals | null; open: OpenReservations | null };
 
 /**
  * Items for the editor dashboard. While surprise mode is on the claim query does not even
@@ -358,6 +366,18 @@ export function listAdminItems(db: DB, revealed: boolean, now: Date = new Date()
       byItem.set(r.itemId, list);
     }
   }
+  const open = new Map<number, OpenReservations>();
+  for (const r of db
+    .select({ itemId: claim.itemId, createdAt: claim.createdAt, remindedAt: claim.remindedAt })
+    .from(claim)
+    .where(and(eq(claim.status, "reserved"), isNull(claim.amount)))
+    .all()) {
+    const o = open.get(r.itemId);
+    open.set(r.itemId, {
+      since: o && o.since <= r.createdAt ? o.since : r.createdAt,
+      remindedAt: o?.remindedAt && (!r.remindedAt || o.remindedAt >= r.remindedAt) ? o.remindedAt : r.remindedAt,
+    });
+  }
   return items.map((i) => {
     const list = byItem.get(i.id) ?? [];
     const physical = i.type === "physical" ? list : i.type === "group" ? list.filter((c) => c.amount === null) : [];
@@ -366,6 +386,7 @@ export function listAdminItems(db: DB, revealed: boolean, now: Date = new Date()
       aggregate: adminAggregate(i.type === "physical" ? i.qtyWanted : 1, physical, revealed),
       // In surprise mode guestName is blank above, so fund totals cannot carry names either.
       fund: itemFund(i, revealed ? list : list.map((c) => ({ ...c, showName: false })), now),
+      open: open.get(i.id) ?? null,
     };
   });
 }

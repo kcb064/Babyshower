@@ -8,6 +8,8 @@ export const FIRST_REMINDER_MS = 3 * DAY_MS;
 /** Later reminders this long after the previous one. */
 export const REPEAT_REMINDER_MS = 7 * DAY_MS;
 export const MAX_REMINDERS = 3;
+/** An editor's "send reminder" on an item skips guests who were mailed about it this recently. */
+export const MANUAL_REMINDER_COOLDOWN_MS = 60 * 60 * 1000;
 
 export interface ReminderState {
   createdAt: Date;
@@ -44,8 +46,18 @@ function lines(items: readonly MailItem[], locale: "en" | "sv"): string {
 
 const DIVIDER = "\n\n----------\n\n";
 
-/** Reminder in English and Swedish: the guest's language is not stored with the reservation. */
-export function reminderMail(opts: { to: string; guestName: string; title: Bilingual; items: readonly MailItem[]; link: string }): Mail {
+/**
+ * Reminder in English and Swedish: the guest's language is not stored with the reservation.
+ * `fromHosts` is the editor's own nudge about one item: it says the hosts may release it.
+ */
+export function reminderMail(opts: {
+  to: string;
+  guestName: string;
+  title: Bilingual;
+  items: readonly MailItem[];
+  link: string;
+  fromHosts?: boolean;
+}): Mail {
   const name = firstName(opts.guestName);
   const en = [
     `Hi ${name},`,
@@ -53,7 +65,9 @@ export function reminderMail(opts: { to: string; guestName: string; title: Bilin
     lines(opts.items, "en"),
     "Have you bought it? Then please mark it as bought, so we know it is taken care of. If you have changed your mind, release it so that someone else can take it. Both take one click here:",
     opts.link,
-    "Your reservation stays in place until you do one or the other.",
+    opts.fromHosts
+      ? "The hosts asked us to check in with you about this. If it stays unmarked, they may release it so that another guest can take it."
+      : "Your reservation stays in place until you do one or the other.",
   ].join("\n\n");
   const sv = [
     `Hej ${name}!`,
@@ -61,7 +75,9 @@ export function reminderMail(opts: { to: string; guestName: string; title: Bilin
     lines(opts.items, "sv"),
     "Har du köpt den? Markera den då som köpt, så vet vi att den är ordnad. Har du ändrat dig kan du släppa reservationen så att någon annan kan ta den. Båda görs med ett klick här:",
     opts.link,
-    "Reservationen ligger kvar tills du gör det ena eller det andra.",
+    opts.fromHosts
+      ? "Värdarna har bett oss höra av oss till dig om det här. Om den förblir omarkerad kan de släppa reservationen så att en annan gäst kan ta den."
+      : "Reservationen ligger kvar tills du gör det ena eller det andra.",
   ].join("\n\n");
   return {
     to: opts.to,

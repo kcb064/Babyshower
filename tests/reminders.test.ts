@@ -7,8 +7,8 @@ import os from "node:os";
 import path from "node:path";
 import { eq } from "drizzle-orm";
 import { openDb, type DB } from "@/db";
-import { createClaim, createContribution, listPublicItems, markClaimPurchased, type NewClaimInput } from "@/db/queries";
-import { notifyReleased, releaseItemReservations, sendDueReminders } from "@/db/reminders";
+import { createClaim, createContribution, listAdminItems, listPublicItems, markClaimPurchased, type NewClaimInput } from "@/db/queries";
+import { notifyReleased, releaseItemReservations, sendDueReminders, sendItemReminders } from "@/db/reminders";
 import { claim, item, registry } from "@/db/schema";
 import { mailConfigFromEnv, type Mail } from "@/lib/mail";
 import { FIRST_REMINDER_MS, inSendingHours, MAX_REMINDERS, reminderDue, reminderMail, REPEAT_REMINDER_MS } from "@/lib/reminders";
@@ -173,6 +173,58 @@ describe("reminders against the database", () => {
     );
     expect(res.ok).toBe(true);
     expect(await sendDueReminders(db, send, linkFor, new Date(now.getTime() + 23 * 3600 * 1000))).toEqual({ sent: 0, failed: 0 });
+  });
+
+  it("an editor can remind about one item right away, past the schedule and its cap", async () => {
+    const carrier = addItem("Carrier", 1, "group"); // a group gift someone is buying whole
+    const crib = addItem("Crib", 2);
+    createClaim(db, base(carrier.id), now);
+    createClaim(db, base(crib.id), now); // same guest, another item: not part of this mail
+    createClaim(db, base(crib.id, { guestKey: "g2", guestName: "Erik", guestEmail: "erik@example.com" }), now);
+    db.update(claim).set({ reminderCount: 3, remindedAt: days(17) }).where(eq(claim.itemId, carrier.id)).run();
+
+    expect(listAdminItems(db, false, days(20)).find((i) => i.id === carrier.id)?.open).toEqual({ since: now, remindedAt: days(17) });
+    expect(await sendItemReminders(db, carrier.id, send, linkFor, days(20))).toEqual({ sent: 1, failed: 0, recent: 0 });
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.to).toBe("anna@example.com");
+    expect(sent[0]?.text).toContain("1 × Carrier");
+    expect(sent[0]?.text).not.toContain("Crib");
+    expect(sent[0]?.text).toContain("https://x.test/link/g1");
+    expect(sent[0]?.text).toContain("they may release it");
+    expect(sent[0]?.text).toContain("kan de släppa reservationen");
+    expect(rows().map((r) => [r.reminderCount, r.remindedAt])).toEqual([
+      [4, days(20)],
+      [0, null],
+      [0, null],
+    ]);
+    expect(listAdminItems(db, false, days(20)).find((i) => i.id === carrier.id)?.open?.remindedAt).toEqual(days(20));
+
+    // A second press within the hour mails nobody; later it does again.
+    expect(await sendItemReminders(db, carrier.id, send, linkFor, new Date(days(20).getTime() + 59 * 60 * 1000))).toEqual({
+      sent: 0,
+      failed: 0,
+      recent: 1,
+    });
+    expect(await sendItemReminders(db, carrier.id, send, linkFor, days(21))).toEqual({ sent: 1, failed: 0, recent: 0 });
+    expect(sent).toHaveLength(2);
+  });
+
+  it("an item reminder skips what is bought or released and survives a refused mail", async () => {
+    const bottle = addItem("Bottle", 3);
+    const a = createClaim(db, base(bottle.id), now);
+    createClaim(db, base(bottle.id, { guestKey: "g2", guestName: "Erik", guestEmail: "erik@example.com", purchased: true }), now);
+    if (!a.ok) throw new Error("claim failed");
+    const failing = async () => {
+      throw new Error("535 authentication failed");
+    };
+    expect(await sendItemReminders(db, bottle.id, failing, linkFor, days(1))).toEqual({ sent: 0, failed: 1, recent: 0 });
+    expect(rows()[0]).toMatchObject({ reminderCount: 0, remindedAt: null });
+    expect(await sendItemReminders(db, bottle.id, send, linkFor, days(1))).toEqual({ sent: 1, failed: 0, recent: 0 });
+    expect(sent.map((m) => m.to)).toEqual(["anna@example.com"]);
+
+    markClaimPurchased(db, a.claim.id, "g1", days(2));
+    expect(await sendItemReminders(db, bottle.id, send, linkFor, days(3))).toEqual({ sent: 0, failed: 0, recent: 0 });
+    expect(listAdminItems(db, false, days(3)).find((i) => i.id === bottle.id)?.open).toBeNull();
   });
 
   it("an editor can release what is reserved but not bought, and the guest is told", async () => {
