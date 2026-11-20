@@ -34,8 +34,12 @@ not marked it as bought get a reminder by email: the first after 3 days, then we
 The mail is in English and Swedish, lists everything that guest still has reserved and links to their
 "my claims" page, where one click marks it bought or releases it. The server checks once an hour and
 only sends between 09:00 and 20:00 Swedish time; **Send reminders now** under *Tools* in `/admin` sends
-whatever is due right away and reports only how many went out. Unconfirmed Swish contributions are not
-reminded. Sent mail lands in the sending account's *Sent* folder with the guest's address and the item
+whatever is due right away and reports only how many went out. Each item with something reserved but
+not bought also shows how long it has waited and when the last reminder went out, with its own
+**Send reminder** button next to **Release reservation**: it mails that guest about that item right
+away, whatever the schedule and the cap of 3 say (at most once an hour), and tells them the hosts may
+release it otherwise. So a stuck item can be nudged first and released later. Unconfirmed Swish
+contributions are not reminded. Sent mail lands in the sending account's *Sent* folder with the guest's address and the item
 names, so use a mailbox the parents-to-be do not read if the surprise matters.
 
 **Starter list.** About 60 Swedish-market suggestions (`src/db/starter.ts`) are inserted hidden on the

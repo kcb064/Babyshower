@@ -1,5 +1,5 @@
 import { getDb } from "@/db";
-import { sendDueReminders, type GuestIdentityLike, type ReminderRun } from "@/db/reminders";
+import { sendDueReminders, sendItemReminders, type GuestIdentityLike, type ItemReminderRun, type ReminderRun } from "@/db/reminders";
 import { serverEnv } from "./env";
 import { guestLinkToken } from "./guest";
 import { mailer } from "./mail";
@@ -15,6 +15,13 @@ export async function runReminders(base: string, now: Date = new Date()): Promis
   const send = mailer();
   if (!send) return null;
   return sendDueReminders(getDb(), send, linkFor(base), now);
+}
+
+/** Remind the guests holding an unbought reservation on one item, now. Null when email is not set up. */
+export async function remindItem(base: string, itemId: number, now: Date = new Date()): Promise<ItemReminderRun | null> {
+  const send = mailer();
+  if (!send) return null;
+  return sendItemReminders(getDb(), itemId, send, linkFor(base), now);
 }
 
 const HOUR_MS = 60 * 60 * 1000;

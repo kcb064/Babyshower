@@ -9,7 +9,7 @@ import { claim, item } from "./schema";
 import { getRegistry } from "./queries";
 import type { Bilingual } from "@/lib/i18n";
 import type { SendMail } from "@/lib/mail";
-import { reminderDue, reminderMail, releasedMail, type MailItem } from "@/lib/reminders";
+import { MANUAL_REMINDER_COOLDOWN_MS, reminderDue, reminderMail, releasedMail, type MailItem } from "@/lib/reminders";
 
 export interface GuestIdentityLike {
   gid: string;
@@ -97,6 +97,78 @@ export async function sendDueReminders(
     }
   } finally {
     globalForReminders.__remindersRunning = false;
+  }
+  return run;
+}
+
+export interface ItemReminderRun extends ReminderRun {
+  /** Guests skipped because they were mailed about this item within the cooldown. */
+  recent: number;
+}
+
+/**
+ * Editor asks for a reminder about one item, now: one mail to each guest holding a reservation on
+ * it that is not marked as bought, whatever the automatic schedule and its cap say. It counts as a
+ * reminder, so the next automatic one waits a week from here.
+ */
+export async function sendItemReminders(
+  db: DB,
+  itemId: number,
+  send: SendMail,
+  linkFor: (guest: GuestIdentityLike) => Promise<string>,
+  now: Date = new Date(),
+): Promise<ItemReminderRun> {
+  const run: ItemReminderRun = { sent: 0, failed: 0, recent: 0 };
+  const rows = db
+    .select({
+      id: claim.id,
+      guestKey: claim.guestKey,
+      guestName: claim.guestName,
+      guestEmail: claim.guestEmail,
+      qty: claim.qty,
+      remindedAt: claim.remindedAt,
+      itemName: item.name,
+    })
+    .from(claim)
+    .innerJoin(item, eq(claim.itemId, item.id))
+    .where(and(eq(claim.itemId, itemId), eq(claim.status, "reserved"), isNull(claim.amount)))
+    .orderBy(asc(claim.createdAt), asc(claim.id))
+    .all();
+  const groups = new Map<string, GuestReservations & { recent: boolean }>();
+  for (const r of rows) {
+    const key = `${r.guestKey}\n${r.guestEmail}`;
+    const g = groups.get(key) ?? {
+      guest: { gid: r.guestKey, email: r.guestEmail },
+      guestName: r.guestName,
+      claimIds: [],
+      items: [],
+      recent: false,
+    };
+    g.claimIds.push(r.id);
+    g.items.push({ qty: r.qty, name: r.itemName });
+    if (r.remindedAt && now.getTime() - r.remindedAt.getTime() < MANUAL_REMINDER_COOLDOWN_MS) g.recent = true;
+    groups.set(key, g);
+  }
+  if (!groups.size) return run;
+  const title = getRegistry(db).title;
+  for (const g of groups.values()) {
+    if (g.recent) {
+      run.recent += 1;
+      continue;
+    }
+    try {
+      await send(
+        reminderMail({ to: g.guest.email, guestName: g.guestName, title, items: g.items, link: await linkFor(g.guest), fromHosts: true }),
+      );
+      db.update(claim)
+        .set({ remindedAt: now, reminderCount: sql`${claim.reminderCount} + 1` })
+        .where(inArray(claim.id, g.claimIds))
+        .run();
+      run.sent += 1;
+    } catch (err) {
+      run.failed += 1;
+      console.error("[reminders] could not send a reminder:", err instanceof Error ? err.message : err);
+    }
   }
   return run;
 }

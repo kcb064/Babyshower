@@ -14,6 +14,7 @@ import { resolveProvider } from "@/lib/translate";
 import { TranslateButton } from "@/components/TranslateButton";
 import { mailEnabled } from "@/lib/mail";
 import { BackupButton, LinkCheckButton, ReminderButton } from "./AdminTools";
+import { ItemReminderButton } from "./ItemReminderButton";
 import { ScrollToItems } from "./ScrollToItems";
 import {
   addCategory,
@@ -45,6 +46,7 @@ export default async function AdminPage() {
   const backups = listBackups(backupsDir());
   // Only non-null after reveal: the surprise-mode rule lives in listRevealedGifts.
   const revealedGifts = listRevealedGifts(db, now);
+  const canMail = mailEnabled();
   const translateEnabled = resolveProvider(process.env) !== "none";
   const categoryPairs = [
     ...categories.map((c) => ({ key: `cat-${c.id}`, enId: `cat-${c.id}-en`, svId: `cat-${c.id}-sv` })),
@@ -167,6 +169,15 @@ export default async function AdminPage() {
                         </span>
                       </p>
                     )}
+                    {it.open && (
+                      <p className="mt-1 text-xs text-ink-soft" data-testid="admin-open-reservation">
+                        {t("items.openSince", { when: formatRelative(it.open.since, now, locale) })}
+                        {" · "}
+                        {it.open.remindedAt
+                          ? t("items.lastReminder", { when: formatRelative(it.open.remindedAt, now, locale) })
+                          : t("items.noReminder")}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-1">
@@ -205,6 +216,9 @@ export default async function AdminPage() {
                   <Link href={`/admin/items/${it.id}`} className="btn btn-secondary btn-small">
                     {t("items.edit")}
                   </Link>
+                  {it.aggregate.qtyClaimed > it.aggregate.qtyPurchased && (
+                    <ItemReminderButton itemId={it.id} enabled={canMail} />
+                  )}
                   {it.aggregate.qtyClaimed > it.aggregate.qtyPurchased && (
                     <form action={releaseReservations}>
                       <input type="hidden" name="id" value={it.id} />
@@ -258,7 +272,7 @@ export default async function AdminPage() {
               {backups[0] ? t("tools.backupLatest", { name: backups[0], count: backups.length }) : t("tools.backupNone")}
             </p>
           </div>
-          <ReminderButton enabled={mailEnabled()} />
+          <ReminderButton enabled={canMail} />
         </div>
       </section>
 
